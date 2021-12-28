@@ -15,7 +15,10 @@
 
         <v-list-item-content>
             <v-list-item-title><code>{{ node.node_address }}</code></v-list-item-title>
-            <div><em>{{ node.status }}</em> ({{ node.bond_rune }} Rune bonded)</div>
+            <div>
+                <em>{{ node.status }}</em> ({{ node.bond_rune }} Rune bonded)
+                v. {{ node.version }}
+            </div>
         </v-list-item-content>
 
         <v-list-item-action>
@@ -25,15 +28,15 @@
                 @click="buttonAction"
             >
                 <div v-if="watched">
-                    Remove
+                    Del
                     <v-icon color="orange darken-4" right>
-                        mdi-open-in-new
+                        mdi-eye-minus
                     </v-icon>
                 </div>
                 <div v-else>
                     Add
-                    <v-icon color="orange darken-4" right>
-                        mdi-open-in-new
+                    <v-icon color="blue darken-4" right>
+                        mdi-eye-plus
                     </v-icon>
                 </div>
             </v-btn>
@@ -73,7 +76,9 @@ export default {
     },
     methods: {
         buttonAction() {
-            this.$emit('pick', this.node, this.watched)
+            this.$emit('pick', {
+                node: this.node, watched: this.watched
+            })
         }
     }
 }

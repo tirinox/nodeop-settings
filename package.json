@@ -2,6 +2,8 @@
   "name": "nodeop-settings",
   "version": "0.1.0",
   "private": true,
+  "license": "MIT",
+  "homepage": "https://github.com/tirinox/nodeop-settings",
   "scripts": {
     "serve": "vue-cli-service serve",
     "build": "vue-cli-service build",
@@ -10,6 +12,7 @@
   "dependencies": {
     "axios": "^0.24.0",
     "core-js": "^3.6.5",
+    "lodash": "^4.17.21",
     "vue": "^2.6.11",
     "vue-ls": "^4.0.0",
     "vue-router": "^3.2.0",
