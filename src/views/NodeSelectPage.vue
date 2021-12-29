@@ -14,11 +14,6 @@
             <v-col>
                 <div class="text-h4">
                     Your watchlist
-                    <v-btn :disabled="loadingNodes" @click="loadNodes" class="ml-2">
-                        <v-icon>mdi-reload</v-icon>
-                        Reload
-                    </v-btn>
-
                     <v-progress-circular
                         :size="30"
                         color="primary"
@@ -30,55 +25,113 @@
 
                 <p>Please choose the nodes you want to monitor from the list bellow.</p>
 
-                <v-text-field label="Search..."
-                              v-model="searchString"
-                              placeholder="Enter any part of address or bond..."></v-text-field>
+                <div>
+                    <v-text-field
+                        label="Search..."
+                        clearable
+                        :disabled="loadingNodes"
+                        v-model="searchString"
+                        placeholder="Enter any part of address or bond...">
+                        <template v-slot:append-outer>
+                            <v-btn-toggle v-model="filterCondition">
+                                <v-btn value="all">
+                                    All
+                                </v-btn>
+
+                                <v-btn value="active">
+                                    Active
+                                    <v-icon>mdi-filter-outline</v-icon>
+                                </v-btn>
+
+                                <v-btn value="other">
+                                    Other
+                                    <v-icon>mdi-filter-outline</v-icon>
+                                </v-btn>
+                            </v-btn-toggle>
+                        </template>
+                    </v-text-field>
+                </div>
 
             </v-col>
         </v-row>
 
         <v-row>
             <v-col>
-                <h3>
-                    All THORChain nodes
+                <div class="text-h5">
+                    THORChain nodes
                     <span class="text--disabled">({{ nodes.length }})</span>
-                </h3>
+
+                    <v-btn :disabled="loadingNodes" @click="loadNodes" class="ml-2" small>
+                        <v-icon>mdi-reload</v-icon>
+                    </v-btn>
+
+                    <v-btn class="ma-2" @click="addAll"
+                           :disabled="loadingNodes"
+                           small
+                           v-show="availableNodes.length > 0">
+                        <v-icon>mdi-fast-forward</v-icon>
+                        Watch all
+                    </v-btn>
+                </div>
+
+                <v-skeleton-loader
+                    v-if="loadingNodes"
+                    type="article, article"
+                ></v-skeleton-loader>
 
                 <v-virtual-scroll
-                    :items="allNodes"
+                    :items="availableNodes"
                     :item-height="70"
                     height="500"
                     bench="2"
-                    v-if="allNodes.length > 0"
+                    v-else-if="availableNodes.length > 0"
                 >
                     <template v-slot:default="{ item }">
                         <NodeListItem :node="item" v-on:pick="pick"></NodeListItem>
                     </template>
                 </v-virtual-scroll>
                 <div v-else class="text-center">
-                    <div class="text-h6 text--disabled">
+                    <div class="text-h6 text--disabled pa-5">
                         <span v-if="anySearch">Not found...</span>
                         <span v-else>Empty list</span>
                     </div>
                 </div>
             </v-col>
 
+
             <v-col>
-                <h3>
+                <div class="text-h5">
                     Watchlist
                     <span class="text--disabled">({{ watchlistAddresses.length }})</span>
-                </h3>
+
+                    <v-btn class="ma-2" color="red accent-1"
+                           small
+                           v-show="watchlistAddresses.length > 0"
+                           @click="removeAll"
+                           :disabled="loadingNodes"
+                    >
+                        <v-icon>mdi-rewind</v-icon>
+                        Unwatch all
+                    </v-btn>
+                </div>
+
+                <v-skeleton-loader
+                    v-if="loadingNodes"
+                    type="article, article"
+                ></v-skeleton-loader>
+
                 <v-virtual-scroll
                     :items="watchListNodes"
                     :item-height="70"
                     height="500"
-                    v-if="watchlistAddresses.length > 0"
+                    v-else-if="watchlistAddresses.length > 0"
                 >
                     <template v-slot:default="{ item }">
                         <NodeListItem :node="item" watched="true" v-on:pick="pick"></NodeListItem>
                     </template>
                 </v-virtual-scroll>
-                <div v-else class="text-center">
+
+                <div v-else class="text-center pa-5">
                     <div class="text-h6 text--disabled">Empty list</div>
                 </div>
             </v-col>
@@ -111,6 +164,7 @@ export default {
             loadingNodes: false,
             searchString: '',
             savedAlertActive: false,
+            filterCondition: 'all',
         }
     },
     async mounted() {
@@ -118,6 +172,14 @@ export default {
         this.watchlistAddresses = this.$ls.get(KEY_WATCH_LIST, [])
     },
     methods: {
+        addAll() {
+            this.watchlistAddresses = this.availableNodes.map(n => n.node_address)
+            this.saveWatchListDebounce()
+        },
+        removeAll() {
+            this.watchlistAddresses = []
+            this.saveWatchListDebounce()
+        },
         saveWatchListDebounce: _.debounce(function () {
             this.saveWatchList()
         }, 1000),
@@ -139,23 +201,29 @@ export default {
             this.loadingNodes = false
         },
         pick({node, watched}) {
-            if(watched) {
+            if (watched) {
                 this.watchlistAddresses = this.watchlistAddresses.filter(a => a !== node.node_address)
                 this.saveWatchListDebounce()
             } else {
-                if(!this.watchlistAddresses.some(a => a === node.node_address)) {
+                if (!this.watchlistAddresses.some(a => a === node.node_address)) {
                     this.watchlistAddresses.push(node.node_address)
                     this.saveWatchListDebounce()
                 }
             }
         },
         isRelevantToSearch(n) {
-            if(this.anySearch) {
+            if (this.anySearch) {
                 return n.node_address.includes(this.searchString.toLowerCase()) ||
                     String(n.bond_rune).includes(this.searchString)
             } else {
                 return true
             }
+        },
+        isRelevantToFilters(n) {
+            const cond = this.filterCondition
+            const st = n.status
+            return cond === 'all' || (cond === 'active' && st === 'Active') ||
+                (cond === 'other' && st !== 'Active')
         },
     },
     computed: {
@@ -165,8 +233,13 @@ export default {
         anySearch() {
             return this.searchString !== ''
         },
-        allNodes() {
-            return this.nodes.filter(this.isRelevantToSearch)
+        availableNodes() {
+            const mySet = new Set(this.watchlistAddresses)
+            return this.nodes.filter(n =>
+                this.isRelevantToSearch(n) &&
+                this.isRelevantToFilters(n) &&
+                !mySet.has(n.node_address)
+            )
         },
         watchListNodes() {
             const results = []

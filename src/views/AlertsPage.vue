@@ -2,7 +2,7 @@
     <div>
         <v-row>
             <v-col>
-                <h1>Alerts setup</h1>
+                <div class="text-h4">Alerts setup</div>
                 <v-switch v-model="allPaused" inset>
                     <template v-slot:label>
                         All paused

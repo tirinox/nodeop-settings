@@ -45,33 +45,44 @@
 </template>
 
 <script>
-
-const COLORS = [
-    'red', 'pink', 'purple',
-    'deep-purple', 'indigo', 'blue',
-    'light-blue', 'cyan', 'teal',
-    'green', 'light-green', 'lime',
-    'yellow', 'amber', 'orange',
-    'deep-orange', 'brown', 'blue-gray', 'gray',
-]
-
-function intHashCode(s) {
-    let hash = 0, i, chr;
-    if (s.length === 0) return hash;
-    for (i = 0; i < s.length; i++) {
-        chr = s.charCodeAt(i);
-        hash = ((hash << 5) - hash) + chr;
-        hash |= 0; // Convert to 32bit integer
-    }
-    return hash;
-}
+//
+//const COLORS = [
+//    'red', 'pink', 'purple',
+//    'deep-purple', 'indigo', 'blue',
+//    'light-blue', 'cyan', 'teal',
+//    'green', 'light-green', 'lime',
+//    'yellow', 'amber', 'orange',
+//    'deep-orange', 'brown', 'blue-gray', 'gray',
+//]
+//
+//function intHashCode(s) {
+//    let hash = 0, i, chr;
+//    if (s.length === 0) return hash;
+//    for (i = 0; i < s.length; i++) {
+//        chr = s.charCodeAt(i);
+//        hash = ((hash << 5) - hash) + chr;
+//        hash |= 0; // Convert to 32bit integer
+//    }
+//    return hash;
+//}
 
 export default {
     name: "NodeListItem",
     props: ['node', 'watched'],
     computed: {
         colorClass() {
-            return COLORS[intHashCode(this.node.initials) % COLORS.length]
+            const st = this.node.status
+            if(st === 'Active') {
+                return 'teal'
+            } else if(st === 'Standby') {
+                return 'amber'
+            } else if(st === 'Disabled') {
+                return 'red'
+            } else if(st === 'Whitelisted') {
+                return 'white'
+            } else {
+                return 'gray'
+            }
         },
     },
     methods: {

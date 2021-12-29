@@ -1,12 +1,12 @@
 <template>
     <div>
-        <div class="text-h4">Welcome to the NodeOp tool setup</div>
+
     </div>
 </template>
 
 <script>
 export default {
-    name: "WelcomePage"
+    name: "NonLinearSlider"
 }
 </script>
 
