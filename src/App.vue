@@ -2,11 +2,13 @@
     <div id="app">
         <v-app>
             <v-app-bar elevate-on-scroll
-                app
+                       app
+                       clipped-left
+                       elevation="12"
             >
                 <v-toolbar-title>
                     <v-avatar>
-                        <img src="/android-chrome-512x512.png" alt="logo" />
+                        <img src="/android-chrome-512x512.png" alt="logo"/>
                     </v-avatar>
 
                     NodeOp Tool settings
@@ -22,18 +24,15 @@
 
             <v-navigation-drawer
                 app
-                left
+                clipped
                 permanent
                 v-model="drawer"
                 width="200"
             >
-
                 <v-list>
-
                     <v-list-item v-for="item in menu_items" :key="item.id" :to="item.url" link>
                         {{ item.name }}
                     </v-list-item>
-
                 </v-list>
             </v-navigation-drawer>
 
@@ -49,6 +48,7 @@
 
 <script>
 import ThemeButton from "./components/ThemeButton";
+
 export default {
     components: {ThemeButton},
     data() {

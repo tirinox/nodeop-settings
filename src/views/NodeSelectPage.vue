@@ -33,17 +33,17 @@
                         v-model="searchString"
                         placeholder="Enter any part of address or bond...">
                         <template v-slot:append-outer>
-                            <v-btn-toggle v-model="filterCondition">
-                                <v-btn value="all">
+                            <v-btn-toggle v-model="filterCondition" shaped>
+                                <v-btn value="all" small>
                                     All
                                 </v-btn>
 
-                                <v-btn value="active">
+                                <v-btn value="active" small>
                                     Active
                                     <v-icon>mdi-filter-outline</v-icon>
                                 </v-btn>
 
-                                <v-btn value="other">
+                                <v-btn value="other" small>
                                     Other
                                     <v-icon>mdi-filter-outline</v-icon>
                                 </v-btn>
@@ -81,7 +81,7 @@
 
                 <v-virtual-scroll
                     :items="availableNodes"
-                    :item-height="70"
+                    :item-height="80"
                     height="500"
                     bench="2"
                     v-else-if="availableNodes.length > 0"
@@ -90,6 +90,7 @@
                         <NodeListItem :node="item" v-on:pick="pick"></NodeListItem>
                     </template>
                 </v-virtual-scroll>
+
                 <div v-else class="text-center">
                     <div class="text-h6 text--disabled pa-5">
                         <span v-if="anySearch">Not found...</span>
@@ -122,7 +123,7 @@
 
                 <v-virtual-scroll
                     :items="watchListNodes"
-                    :item-height="70"
+                    :item-height="80"
                     height="500"
                     v-else-if="watchlistAddresses.length > 0"
                 >
@@ -132,7 +133,10 @@
                 </v-virtual-scroll>
 
                 <div v-else class="text-center pa-5">
-                    <div class="text-h6 text--disabled">Empty list</div>
+                    <div class="text-h6 text--disabled pa-5">
+                        <span v-if="anySearch">Not found...</span>
+                        <span v-else>Empty list</span>
+                    </div>
                 </div>
             </v-col>
         </v-row>
@@ -212,9 +216,12 @@ export default {
             }
         },
         isRelevantToSearch(n) {
+            const needle = this.searchString.toLowerCase()
             if (this.anySearch) {
-                return n.node_address.includes(this.searchString.toLowerCase()) ||
-                    String(n.bond_rune).includes(this.searchString)
+                return n.node_address.includes(needle) ||
+                    String(n.bond_rune).includes(needle) ||
+                    n.status.toLowerCase().includes(needle) ||
+                    n.version.includes(needle)
             } else {
                 return true
             }

@@ -1,7 +1,7 @@
 <template>
 
     <v-list-item :key="node.node_address">
-        <v-list-item-avatar>
+        <v-list-item-avatar @click="copyNodeAddress">
             <v-btn
                 fab
                 small
@@ -9,15 +9,17 @@
                 :color="colorClass"
                 light
             >
-                {{ node.initials }}
+                <span v-show="!copied">{{ node.initials }}</span>
+                <v-icon v-show="copied">mdi-content-copy</v-icon>
+
             </v-btn>
         </v-list-item-avatar>
 
         <v-list-item-content>
             <v-list-item-title><code>{{ node.node_address }}</code></v-list-item-title>
             <div>
-                <em>{{ node.status }}</em> ({{ node.bond_rune }} Rune bonded)
-                v. {{ node.version }}
+                <v-chip :color="colorClass" x-small>{{ node.status }} v.{{ node.version }}</v-chip>
+                <span class="ma-2">ᚱ<strong>{{ millify(node.bond_rune) }}</strong> bonded</span>
             </div>
         </v-list-item-content>
 
@@ -66,31 +68,47 @@
 //    return hash;
 //}
 
+import copy from 'copy-text-to-clipboard'
+import millify from "millify";
+
 export default {
     name: "NodeListItem",
     props: ['node', 'watched'],
     computed: {
         colorClass() {
             const st = this.node.status
-            if(st === 'Active') {
+            if (st === 'Active') {
                 return 'teal'
-            } else if(st === 'Standby') {
-                return 'amber'
-            } else if(st === 'Disabled') {
+            } else if (st === 'Standby') {
+                return 'amber darken-1'
+            } else if (st === 'Disabled') {
                 return 'red'
-            } else if(st === 'Whitelisted') {
-                return 'white'
+            } else if (st === 'Whitelisted') {
+                return 'gray darken-1'
             } else {
-                return 'gray'
+                return 'purple'
             }
         },
+    },
+    data() {
+        return {
+            copied: false,
+        }
     },
     methods: {
         buttonAction() {
             this.$emit('pick', {
                 node: this.node, watched: this.watched
             })
-        }
+        },
+        millify,
+        copyNodeAddress() {
+            copy(this.node.node_address)
+            this.copied = true
+            setInterval(() => {
+                this.copied = false
+            }, 2000)
+        },
     }
 }
 </script>

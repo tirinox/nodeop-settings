@@ -11,8 +11,10 @@
   },
   "dependencies": {
     "axios": "^0.24.0",
+    "copy-text-to-clipboard": "^3.0.1",
     "core-js": "^3.6.5",
     "lodash": "^4.17.21",
+    "millify": "^4.0.0",
     "vue": "^2.6.11",
     "vue-ls": "^4.0.0",
     "vue-router": "^3.2.0",
