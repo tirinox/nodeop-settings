@@ -33,7 +33,7 @@
                         v-model="searchString"
                         placeholder="Enter any part of address or bond...">
                         <template v-slot:append-outer>
-                            <v-btn-toggle v-model="filterCondition" shaped>
+                            <v-btn-toggle v-model="filterCondition" shaped mandatory>
                                 <v-btn value="all" small>
                                     All
                                 </v-btn>
@@ -216,7 +216,7 @@ export default {
             }
         },
         isRelevantToSearch(n) {
-            const needle = this.searchString.toLowerCase()
+            const needle = this.searchString ? this.searchString.toLowerCase() : ''
             if (this.anySearch) {
                 return n.node_address.includes(needle) ||
                     String(n.bond_rune).includes(needle) ||
