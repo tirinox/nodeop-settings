@@ -48,6 +48,7 @@
 
 <script>
 import ThemeButton from "./components/ThemeButton";
+import {APIConnector} from "./service/api";
 
 export default {
     components: {ThemeButton},
@@ -73,8 +74,19 @@ export default {
             ]
         }
     },
+    methods: {
+        async loadToken() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const token = urlParams.get('token')
+            console.info(token)
+            const api = new APIConnector()
+            api.setToken(token)
+            await api.readSettings()
+        }
+    },
     mounted() {
         document.title = 'NodeOp setup'
+        this.loadToken().then()
     }
 }
 </script>
