@@ -148,10 +148,11 @@
 import axios from "axios";
 import NodeListItem from "../components/NodeListItem";
 import _ from 'lodash'
+import {TokenStore} from "../service/api";
 
 const NODE_URL = 'https://midgard.thorchain.info/v2/thorchain/nodes'
 const THORDIV = 1e-8
-const KEY_WATCH_LIST = 'watchList'
+// const KEY_WATCH_LIST = 'watchList'
 
 function sortNodes(nodes) {
     nodes.sort((a, b) => b.bond_rune - a.bond_rune)
@@ -164,7 +165,6 @@ export default {
     data() {
         return {
             nodes: [],
-            watchlistAddresses: [],
             loadingNodes: false,
             searchString: '',
             savedAlertActive: false,
@@ -173,23 +173,24 @@ export default {
     },
     async mounted() {
         await this.loadNodes()
-        this.watchlistAddresses = this.$ls.get(KEY_WATCH_LIST, [])
+        // this.watchlistAddresses = this.$ls.get(KEY_WATCH_LIST, [])
     },
     methods: {
         addAll() {
-            this.watchlistAddresses = this.availableNodes.map(n => n.node_address)
+            TokenStore.nodesList = this.availableNodes.map(n => n.node_address)
             this.saveWatchListDebounce()
         },
         removeAll() {
-            this.watchlistAddresses = []
+            TokenStore.nodesList = []
             this.saveWatchListDebounce()
         },
         saveWatchListDebounce: _.debounce(function () {
             this.saveWatchList()
         }, 1000),
         saveWatchList() {
-            this.$ls.set(KEY_WATCH_LIST, this.watchlistAddresses)
+            // this.$ls.set(KEY_WATCH_LIST, this.watchlistAddresses)
             this.savedAlertActive = true
+            // todo!
         },
         async loadNodes() {
             this.loadingNodes = true
@@ -206,11 +207,11 @@ export default {
         },
         pick({node, watched}) {
             if (watched) {
-                this.watchlistAddresses = this.watchlistAddresses.filter(a => a !== node.node_address)
+                TokenStore.nodesList = TokenStore.nodesList.filter(a => a !== node.node_address)
                 this.saveWatchListDebounce()
             } else {
-                if (!this.watchlistAddresses.some(a => a === node.node_address)) {
-                    this.watchlistAddresses.push(node.node_address)
+                if (!TokenStore.nodesList.some(a => a === node.node_address)) {
+                    TokenStore.nodesList.push(node.node_address)
                     this.saveWatchListDebounce()
                 }
             }
@@ -234,6 +235,9 @@ export default {
         },
     },
     computed: {
+        watchlistAddresses() {
+            return TokenStore.nodesList
+        },
         nodeMap() {
             return Object.fromEntries(this.nodes.map(node => [node.node_address, node]))
         },
@@ -241,7 +245,7 @@ export default {
             return this.searchString !== ''
         },
         availableNodes() {
-            const mySet = new Set(this.watchlistAddresses)
+            const mySet = new Set(TokenStore.nodesList)
             return this.nodes.filter(n =>
                 this.isRelevantToSearch(n) &&
                 this.isRelevantToFilters(n) &&
@@ -251,7 +255,7 @@ export default {
         watchListNodes() {
             const results = []
             const nodeMap = this.nodeMap
-            for (const address of this.watchlistAddresses) {
+            for (const address of TokenStore.nodesList) {
                 const node = nodeMap[address]
                 results.push(node ?? {
                     status: 'Not found',

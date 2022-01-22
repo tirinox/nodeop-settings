@@ -30,16 +30,16 @@
                 @click="buttonAction"
             >
                 <div v-if="watched">
-                    Del
-                    <v-icon color="orange darken-4" right>
+                    <v-icon color="orange darken-2">
                         mdi-eye-minus
                     </v-icon>
+                    Del
                 </div>
                 <div v-else>
-                    Add
-                    <v-icon color="blue darken-4" right>
+                    <v-icon>
                         mdi-eye-plus
                     </v-icon>
+                    Add
                 </div>
             </v-btn>
         </v-list-item-action>

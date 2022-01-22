@@ -28,6 +28,14 @@
                 <v-icon>mdi-comment-alert-outline</v-icon>
                 Configure alerts
             </v-btn>
+            <p class="mt-4">
+                If you no longer need this link or if you have a suspicion of leaking the link to unwanted persons,
+                you can invalidate it. Your settings will still not be affected.
+            </p>
+            <v-btn color="warning">
+                <v-icon>mdi-cancel</v-icon>
+                Revoke the link
+            </v-btn>
         </div>
 
         <v-alert
@@ -70,11 +78,11 @@
 </template>
 
 <script>
-import {TokenMixin} from "../service/api";
+import {SettingsStorageMixin} from "../service/api";
 
 export default {
     name: "WelcomePage",
-    mixins: [TokenMixin],
+    mixins: [SettingsStorageMixin],
     computed: {
         envName() {
             return process.env.NODE_ENV

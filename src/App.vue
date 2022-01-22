@@ -12,6 +12,7 @@
                     </v-avatar>
 
                     NodeOp Tool settings
+                    <span v-if="isAnythingUpdated">[Unsaved]</span>
                 </v-toolbar-title>
 
                 <v-spacer></v-spacer>
@@ -30,9 +31,16 @@
                 width="200"
             >
                 <v-list>
-                    <v-list-item v-for="item in menu_items" :key="item.id" :to="item.url" link
-                                 :disabled="!isMenuEnabledId(item.id)">
-                        {{ item.name }}
+                    <v-list-item to="/" link>
+                        Start here
+                    </v-list-item>
+                    <v-list-item to="/select/nodes" link :disabled="!validConnection">
+                        Watchlist
+                        <v-icon small class="ml-1" v-if="isNodeListUpdated">mdi-asterisk</v-icon>
+                    </v-list-item>
+                    <v-list-item to="/alerts" link :disabled="!validConnection">
+                        Alerts
+                        <v-icon small class="ml-1" v-if="isSettingsUpdated">mdi-asterisk</v-icon>
                     </v-list-item>
                 </v-list>
             </v-navigation-drawer>
@@ -49,31 +57,14 @@
 
 <script>
 import ThemeButton from "./components/ThemeButton";
-import {APIConnector, TokenMixin} from "./service/api";
+import {APIConnector, SettingsStorageMixin} from "./service/api";
 
 export default {
     components: {ThemeButton},
-    mixins: [TokenMixin],
+    mixins: [SettingsStorageMixin],
     data() {
         return {
             drawer: true,
-            menu_items: [
-                {
-                    id: 0,
-                    name: 'Start',
-                    url: '/'
-                },
-                {
-                    id: 1,
-                    name: 'Watchlist',
-                    url: '/select/nodes'
-                },
-                {
-                    id: 2,
-                    name: 'Alerts',
-                    url: '/alerts'
-                },
-            ]
         }
     },
     methods: {
@@ -83,9 +74,6 @@ export default {
             const api = new APIConnector()
             api.setToken(token)
             await api.readSettings()
-        },
-        isMenuEnabledId(id) {
-            return id === 0 || this.validConnection
         },
     },
     mounted() {
