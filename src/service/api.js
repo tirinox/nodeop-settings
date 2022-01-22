@@ -8,8 +8,24 @@ export const TokenStore = Vue.observable({
     token: '',
     messenger: 'Unknown',
     channelId: '',
-    loading: false
+    loading: false,
+    isError: false,
+    errorText: '',
 })
+
+export const TokenMixin = {
+    computed: {
+        validConnection() {
+            return Boolean(TokenStore.token) && !this.isTokenLoading && !TokenStore.isError
+        },
+        isTokenLoading() {
+            return TokenStore.loading
+        },
+        tokenErrorText() {
+            return TokenStore.errorText
+        }
+    }
+}
 
 export class APIConnector {
     constructor() {
@@ -20,7 +36,11 @@ export class APIConnector {
         TokenStore.loading = true
         try {
             const response = await axios.get(`${this.url}/api/settings/${TokenStore.token}`)
-            console.log(response.data)
+            const j = response.data
+            if(j['error']) {
+                TokenStore.isError = true
+                TokenStore.errorText = j['error']
+            }
         } finally {
             TokenStore.loading = false
         }

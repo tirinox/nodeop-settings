@@ -32,7 +32,7 @@
                         :disabled="loadingNodes"
                         v-model="searchString"
                         placeholder="Enter any part of address or bond...">
-                        <template v-slot:append-outer>
+                        <template v-slot:prepend>
                             <v-btn-toggle v-model="filterCondition" shaped mandatory>
                                 <v-btn value="all" small>
                                     All

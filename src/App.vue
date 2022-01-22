@@ -30,7 +30,8 @@
                 width="200"
             >
                 <v-list>
-                    <v-list-item v-for="item in menu_items" :key="item.id" :to="item.url" link>
+                    <v-list-item v-for="item in menu_items" :key="item.id" :to="item.url" link
+                                 :disabled="!isMenuEnabledId(item.id)">
                         {{ item.name }}
                     </v-list-item>
                 </v-list>
@@ -48,10 +49,11 @@
 
 <script>
 import ThemeButton from "./components/ThemeButton";
-import {APIConnector} from "./service/api";
+import {APIConnector, TokenMixin} from "./service/api";
 
 export default {
     components: {ThemeButton},
+    mixins: [TokenMixin],
     data() {
         return {
             drawer: true,
@@ -82,7 +84,10 @@ export default {
             const api = new APIConnector()
             api.setToken(token)
             await api.readSettings()
-        }
+        },
+        isMenuEnabledId(id) {
+            return id === 0 || this.validConnection
+        },
     },
     mounted() {
         document.title = 'NodeOp setup'
