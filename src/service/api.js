@@ -6,11 +6,16 @@ const PROD_RUL = 'https://settings.thornode.org'
 
 export const TokenStore = Vue.observable({
     token: '',
-    messenger: 'Unknown',
+    messenger: {
+        platform: '',
+        username: '',
+        name: '',
+    },
     channelId: '',
     loading: false,
     isError: false,
     errorText: '',
+    settings: {},
 })
 
 export const TokenMixin = {
@@ -23,6 +28,12 @@ export const TokenMixin = {
         },
         tokenErrorText() {
             return TokenStore.errorText
+        },
+        channelId() {
+            return TokenStore.channelId
+        },
+        messengerInfo() {
+            return TokenStore.messenger
         }
     }
 }
@@ -40,10 +51,14 @@ export class APIConnector {
             if(j['error']) {
                 TokenStore.isError = true
                 TokenStore.errorText = j['error']
+            } else {
+                TokenStore.settings = j['settings']
+                TokenStore.messenger = TokenStore.settings['_messenger']
             }
         } finally {
             TokenStore.loading = false
         }
+        console.log(TokenStore)
     }
 
     setToken(token) {

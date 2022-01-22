@@ -6,6 +6,14 @@
             <p>
                 Here you can set up personal notifications about the status of the nodes you are interested in.
             </p>
+
+            <div class="my-1">
+                <p>You are currently configuring:</p>
+                <div class="text-h5">{{ messengerInfo.platform }}
+                    (@{{ messengerInfo.username }}, {{ messengerInfo.name }})
+                </div>
+            </div>
+
             <p>
                 First, go to the Watchlist tab to select the nodes from the list.
             </p>
@@ -51,7 +59,7 @@
             </div>
 
         </v-alert>
-        <div class="text-center" v-if="isLoading">
+        <div class="text-center" v-if="isTokenLoading">
             <v-progress-circular
                 :size="50"
                 color="amber"
