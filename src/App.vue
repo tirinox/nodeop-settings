@@ -50,7 +50,6 @@
                     <router-view></router-view>
                 </v-container>
             </v-main>
-
         </v-app>
     </div>
 </template>
@@ -79,6 +78,22 @@ export default {
     mounted() {
         document.title = 'NodeOp setup'
         this.loadToken().then()
+    },
+    created() {
+        const that = this
+        window.onload = function () {
+            window.addEventListener("beforeunload", function (e) {
+                if (!that.isAnythingUpdated) {
+                    return undefined;
+                }
+
+                const confirmationMessage = 'It looks like you have been editing something. '
+                    + 'If you leave before saving, your changes will be lost.';
+
+                (e || window.event).returnValue = confirmationMessage; //Gecko + IE
+                return confirmationMessage; //Gecko + Webkit, Safari, Chrome etc.
+            });
+        };
     }
 }
 </script>

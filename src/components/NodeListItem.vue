@@ -12,6 +12,7 @@
                 <span v-show="!copied">{{ node.initials }}</span>
                 <v-icon v-show="copied">mdi-content-copy</v-icon>
 
+                <v-icon v-if="watched" class="eye" large>mdi-eye</v-icon>
             </v-btn>
         </v-list-item-avatar>
 
@@ -78,7 +79,7 @@ export default {
         colorClass() {
             const st = this.node.status
             if (st === 'Active') {
-                return 'teal'
+                return 'green'
             } else if (st === 'Standby') {
                 return 'amber darken-1'
             } else if (st === 'Disabled') {
@@ -114,5 +115,9 @@ export default {
 </script>
 
 <style scoped>
-
+    .eye {
+        position: absolute;
+        opacity: 20%;
+        left: auto;
+    }
 </style>
