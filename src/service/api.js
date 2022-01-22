@@ -81,16 +81,24 @@ export class APIConnector {
         } finally {
             TokenStore.loading = false
         }
-        console.log(TokenStore)
     }
 
-    async writeSettings() {
+    restoreOriginalNodes() {
+        TokenStore.nodesList = _.cloneDeep(TokenStore.original.nodesList)
+    }
+
+    restoreOriginalSettings() {
+        TokenStore.settings = _.cloneDeep(TokenStore.original.settings)
+    }
+
+    async _writeSettings() {
         TokenStore.loading = true
         try {
             const settings = {
                 settings: TokenStore.settings,
-                nodes: TokenStore.nodes
+                nodes: TokenStore.nodesList,
             }
+            console.log(settings)
             const response = await axios.post(this.settingsUrl(), settings)
             const j = response.data
             if (j['error']) {
@@ -100,6 +108,16 @@ export class APIConnector {
         } finally {
             TokenStore.loading = false
         }
+    }
+
+    async saveSettings() {
+        try {
+            await this._writeSettings()
+            await this.readSettings()
+        } catch (e) {
+            return false
+        }
+        return true
     }
 
     async revokeLink() {

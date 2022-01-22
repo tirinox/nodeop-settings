@@ -21,6 +21,11 @@
                         v-show="loadingNodes"
                         class="ml-3"
                     ></v-progress-circular>
+
+                    <div class="float-end" v-if="isAnythingUpdated">
+                        <v-btn color="primary" large class="mx-2" @click="actionSave">Save</v-btn>
+                        <v-btn color="secondary" large class="mx-2" @click="actionReset">Reset</v-btn>
+                    </div>
                 </div>
 
                 <p>Please choose the nodes you want to monitor from the list bellow.</p>
@@ -105,7 +110,7 @@
                     Watchlist
                     <span class="text--disabled">({{ watchlistAddresses.length }})</span>
 
-                    <v-btn class="ma-2" color="red accent-1"
+                    <v-btn class="ma-2" color="orange accent-4"
                            small
                            v-show="watchlistAddresses.length > 0"
                            @click="removeAll"
@@ -147,8 +152,7 @@
 
 import axios from "axios";
 import NodeListItem from "../components/NodeListItem";
-import _ from 'lodash'
-import {TokenStore} from "../service/api";
+import {APIConnector, SettingsStorageMixin, TokenStore} from "../service/api";
 
 const NODE_URL = 'https://midgard.thorchain.info/v2/thorchain/nodes'
 const THORDIV = 1e-8
@@ -162,6 +166,7 @@ function sortNodes(nodes) {
 export default {
     name: 'NodeSelectPage',
     components: {NodeListItem},
+    mixins: [SettingsStorageMixin],
     data() {
         return {
             nodes: [],
@@ -178,19 +183,9 @@ export default {
     methods: {
         addAll() {
             TokenStore.nodesList = this.availableNodes.map(n => n.node_address)
-            this.saveWatchListDebounce()
         },
         removeAll() {
             TokenStore.nodesList = []
-            this.saveWatchListDebounce()
-        },
-        saveWatchListDebounce: _.debounce(function () {
-            this.saveWatchList()
-        }, 1000),
-        saveWatchList() {
-            // this.$ls.set(KEY_WATCH_LIST, this.watchlistAddresses)
-            this.savedAlertActive = true
-            // todo!
         },
         async loadNodes() {
             this.loadingNodes = true
@@ -208,11 +203,9 @@ export default {
         pick({node, watched}) {
             if (watched) {
                 TokenStore.nodesList = TokenStore.nodesList.filter(a => a !== node.node_address)
-                this.saveWatchListDebounce()
             } else {
                 if (!TokenStore.nodesList.some(a => a === node.node_address)) {
                     TokenStore.nodesList.push(node.node_address)
-                    this.saveWatchListDebounce()
                 }
             }
         },
@@ -232,6 +225,16 @@ export default {
             const st = n.status
             return cond === 'all' || (cond === 'active' && st === 'Active') ||
                 (cond === 'other' && st !== 'Active')
+        },
+        actionReset() {
+            const api = new APIConnector()
+            api.restoreOriginalNodes()
+        },
+        async actionSave() {
+            const api = new APIConnector()
+            if(await api.saveSettings()) {
+                this.savedAlertActive = true
+            }
         },
     },
     computed: {

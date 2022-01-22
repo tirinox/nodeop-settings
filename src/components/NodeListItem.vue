@@ -9,15 +9,21 @@
                 :color="colorClass"
                 light
             >
-                <span v-show="!copied">{{ node.initials }}</span>
-                <v-icon v-show="copied">mdi-content-copy</v-icon>
+<!--                <v-icon v-if="watched" class="eye" large>mdi-eye</v-icon>-->
 
-                <v-icon v-if="watched" class="eye" large>mdi-eye</v-icon>
+                <v-icon v-show="copied" :class="textColorClass">mdi-check-circle-outline</v-icon>
+                <span v-show="!copied" :class="textColorClass">{{ node.initials }}</span>
+
             </v-btn>
         </v-list-item-avatar>
 
         <v-list-item-content>
-            <v-list-item-title><code>{{ node.node_address }}</code></v-list-item-title>
+            <v-list-item-title>
+                <code>{{ node.node_address }}</code>
+                <v-icon @click="copyNodeAddress" x-small>
+                    mdi-content-copy
+                </v-icon>
+            </v-list-item-title>
             <div>
                 <v-chip :color="colorClass" x-small>{{ node.status }} v.{{ node.version }}</v-chip>
                 <span class="ma-2">ᚱ<strong>{{ millify(node.bond_rune) }}</strong> bonded</span>
@@ -34,13 +40,12 @@
                     <v-icon color="orange darken-2">
                         mdi-eye-minus
                     </v-icon>
-                    Del
+
                 </div>
                 <div v-else>
                     <v-icon>
                         mdi-eye-plus
                     </v-icon>
-                    Add
                 </div>
             </v-btn>
         </v-list-item-action>
@@ -48,26 +53,6 @@
 </template>
 
 <script>
-//
-//const COLORS = [
-//    'red', 'pink', 'purple',
-//    'deep-purple', 'indigo', 'blue',
-//    'light-blue', 'cyan', 'teal',
-//    'green', 'light-green', 'lime',
-//    'yellow', 'amber', 'orange',
-//    'deep-orange', 'brown', 'blue-gray', 'gray',
-//]
-//
-//function intHashCode(s) {
-//    let hash = 0, i, chr;
-//    if (s.length === 0) return hash;
-//    for (i = 0; i < s.length; i++) {
-//        chr = s.charCodeAt(i);
-//        hash = ((hash << 5) - hash) + chr;
-//        hash |= 0; // Convert to 32bit integer
-//    }
-//    return hash;
-//}
 
 import copy from 'copy-text-to-clipboard'
 import millify from "millify";
@@ -90,6 +75,13 @@ export default {
                 return 'purple'
             }
         },
+        textColorClass() {
+            if(this.node.status === 'Whitelisted') {
+                return 'blacl--text'
+            } else {
+                return 'white--text'
+            }
+        }
     },
     data() {
         return {

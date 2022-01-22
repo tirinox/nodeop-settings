@@ -12,7 +12,9 @@
                     </v-avatar>
 
                     NodeOp Tool settings
-                    <span v-if="isAnythingUpdated">[Unsaved]</span>
+                    <span v-if="isAnythingUpdated">
+                        <v-icon v-if="isNodeListUpdated">mdi-asterisk</v-icon>
+                    </span>
                 </v-toolbar-title>
 
                 <v-spacer></v-spacer>
