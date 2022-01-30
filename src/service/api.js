@@ -2,31 +2,36 @@ import axios from "axios";
 import Vue from "vue";
 import _ from "lodash";
 import {eventBus, EVENTS} from "./bus";
+import {simpleClone} from "./utils";
 
 const DEV_URL = 'http://127.0.0.1:8088'
 const PROD_RUL = 'https://settings.thornode.org'
 
 export const KEY_MESSENGER = '_messenger'
 
-export const TokenStore = Vue.observable({
-    token: '',
-    messenger: {
-        platform: '',
-        username: '',
-        name: '',
-    },
-    channelId: '',
-    loading: true,
-    isError: false,
-    errorText: '',
-    settings: {},
-    nodesList: [],
-    original: {
+function tokenStoreInitialState() {
+    return {
+        token: '',
+        messenger: {
+            platform: '',
+            username: '',
+            name: '',
+        },
+        channelId: '',
+        loading: true,
+        isError: false,
+        errorText: '',
         settings: {},
-        nodesList: []
-    },
-    loadIteration: 0
-})
+        nodesList: [],
+        original: {
+            settings: {},
+            nodesList: []
+        },
+        loadIteration: 0
+    }
+}
+
+export const TokenStore = Vue.observable(tokenStoreInitialState())
 
 export const SettingsStorageMixin = {
     computed: {
@@ -46,13 +51,17 @@ export const SettingsStorageMixin = {
             return TokenStore.messenger
         },
         isSettingsUpdated() {
-            return !_.isEqual(TokenStore.settings, TokenStore.original.settings)
+            const s1 = simpleClone(TokenStore.settings)
+            const s2 = simpleClone(TokenStore.original.settings)
+            const eq = _.isEqual(s1, s2)
+            console.log("isSettingsUpdated: current = ", s1, "\n", "original = ", s2, "\n", `EQ = ${eq}`)
+            return eq
         },
         isNodeListUpdated() {
             return !_.isEqual(new Set(TokenStore.nodesList), new Set(TokenStore.original.nodesList))
         },
         isAnythingUpdated() {
-            return this.isSettingsUpdated || this.isNodeListUpdated
+            return this.validConnection && (this.isSettingsUpdated || this.isNodeListUpdated)
         },
     },
     methods: {}
@@ -137,8 +146,13 @@ export class APIConnector {
                 TokenStore.errorText = j['error']
             }
         } finally {
+            this.purgeData()
             TokenStore.loading = false
         }
+    }
+
+    purgeData() {
+        Object.assign(TokenStore, tokenStoreInitialState())
     }
 
     setToken(token) {

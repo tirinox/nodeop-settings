@@ -97,7 +97,8 @@
                 </v-switch>
 
                 <p>
-                    There will be an alert if any of the services stops responding for a period of time. <strong>Bifrost</strong> and <strong>RPC</strong> are supported.
+                    There will be an alert if any of the services stops responding for a period of time.
+                    <strong>Bifrost</strong> and <strong>RPC</strong> are supported.
                 </p>
 
                 <v-slider
@@ -160,9 +161,8 @@
 
 import {APIConnector, SettingsStorageMixin, TokenStore} from "../service/api";
 import {eventBus, EVENTS} from "../service/bus";
-import {secondsToConvenientString, simpleClone, SliderConverter} from "../service/utils";
+import {secondsToConvenientString, SliderConverter} from "../service/utils";
 import PausedLabel from "../components/PausedLabel";
-import _ from "lodash";
 
 export default {
     name: "AlertsPage",
@@ -267,11 +267,6 @@ export default {
     },
     watch: {
         convertedSettings(newConvertedSettings) {
-            const s1 = simpleClone(TokenStore.settings)
-            const s2 = simpleClone(TokenStore.original.settings)
-            const eq = _.isEqual(s1, s2)
-            console.log("current = ", s1, "\n", "original = ", s2, "\n", `EQ = ${eq}`)
-
             this.convertSlidersToExternal()
 
             TokenStore.settings = newConvertedSettings
@@ -286,8 +281,8 @@ export default {
     created() {
         this.onLoadedSettingsFromServer()
     },
-    destroyed() {
-        eventBus.$off(EVENTS.ON_SETTINGS_LOADED, this.onLoadedSettingsFromServer)
+    beforeDestroy() {
+        // eventBus.$off(EVENTS.ON_SETTINGS_LOADED, this.onLoadedSettingsFromServer)
     },
 }
 </script>

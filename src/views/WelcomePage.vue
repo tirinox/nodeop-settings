@@ -32,7 +32,7 @@
                 If you no longer need this link or if you have a suspicion of leaking the link to unwanted persons,
                 you can invalidate it. Your settings will still not be affected.
             </p>
-            <v-btn color="warning">
+            <v-btn color="warning" @click="confirmRevokeDialog = true">
                 <v-icon>mdi-cancel</v-icon>
                 Revoke the link
             </v-btn>
@@ -74,24 +74,41 @@
                 indeterminate
             ></v-progress-circular>
         </div>
+
+        <DialogConfirmRevokeLink v-model="confirmRevokeDialog" @confirmed="onClickRevoke"></DialogConfirmRevokeLink>
     </div>
 </template>
 
 <script>
-import {SettingsStorageMixin} from "../service/api";
+import {APIConnector, SettingsStorageMixin} from "../service/api";
+import {eventBus, EVENTS} from "../service/bus";
+import DialogConfirmRevokeLink from "../components/DialogConfirmRevokeLink";
 
 export default {
     name: "WelcomePage",
+    components: {DialogConfirmRevokeLink},
     mixins: [SettingsStorageMixin],
     computed: {
         envName() {
             return process.env.NODE_ENV
         },
     },
+    data() {
+        return {
+            confirmRevokeDialog: false,
+        }
+    },
     created() {
         this.URL_SLACK = 'https://slack.com/oauth/v2/authorize?client_id=2687560270260.2682403425669&scope=channels:history,chat:write,commands,im:history,incoming-webhook,reactions:write,users:read,users.profile:read&user_scope='
         this.URL_TELEGRAM = 'https://t.me/thor_infobot'
         this.URL_DISCORD = 'None'
+    },
+    methods: {
+        async onClickRevoke() {
+            const api = new APIConnector()
+            const result = await api.revokeLink()
+            eventBus.$emit(EVENTS.ON_LINK_REVOKED, result)
+        }
     }
 }
 </script>

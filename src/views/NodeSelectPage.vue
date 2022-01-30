@@ -102,7 +102,7 @@
                     Watchlist
                     <span class="text--disabled">({{ watchlistAddresses.length }})</span>
 
-                    <v-btn class="ma-2" color="orange accent-4"
+                    <v-btn class="ma-2" color="orange accent-4 white--text"
                            small
                            v-show="watchlistAddresses.length > 0"
                            @click="removeAll"
