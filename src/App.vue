@@ -1,6 +1,26 @@
 <template>
     <div id="app">
         <v-app>
+            <v-snackbar
+                :timeout="2000"
+                :value="true"
+                color="success accent-4"
+                elevation="24"
+                v-model="savedAlertActive"
+            >
+                Your watchlist saved.
+            </v-snackbar>
+
+            <v-snackbar
+                :timeout="2000"
+                :value="true"
+                color="error"
+                elevation="24"
+                v-model="errorAlertActive"
+            >
+                Error saving the settings. Check your connection.
+            </v-snackbar>
+
             <v-app-bar elevate-on-scroll
                        app
                        clipped-left
@@ -59,6 +79,7 @@
 <script>
 import ThemeButton from "./components/ThemeButton";
 import {APIConnector, SettingsStorageMixin} from "./service/api";
+import {eventBus, EVENTS} from "./service/bus";
 
 export default {
     components: {ThemeButton},
@@ -66,6 +87,8 @@ export default {
     data() {
         return {
             drawer: true,
+            savedAlertActive: false,
+            errorAlertActive: false,
         }
     },
     methods: {
@@ -94,8 +117,15 @@ export default {
 
                 (e || window.event).returnValue = confirmationMessage; //Gecko + IE
                 return confirmationMessage; //Gecko + Webkit, Safari, Chrome etc.
-            });
-        };
+            })
+        }
+        eventBus.$on(EVENTS.PRESENT_SAVE_RESULT, (result) => {
+            if(result) {
+                this.savedAlertActive = true
+            } else {
+                this.errorAlertActive = true
+            }
+        })
     }
 }
 </script>

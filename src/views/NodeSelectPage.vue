@@ -1,15 +1,5 @@
 <template>
     <div>
-        <v-snackbar
-            :timeout="2000"
-            :value="true"
-            color="success accent-4"
-            elevation="24"
-            v-model="savedAlertActive"
-        >
-            Your watchlist saved.
-        </v-snackbar>
-
         <v-row>
             <v-col>
                 <div class="text-h4">
@@ -22,13 +12,16 @@
                         class="ml-3"
                     ></v-progress-circular>
 
-                    <div class="float-end" v-if="isAnythingUpdated">
+                    <div class="float-end" v-if="isNodeListUpdated">
                         <v-btn color="primary" large class="mx-2" @click="actionSave">Save</v-btn>
                         <v-btn color="secondary" large class="mx-2" @click="actionReset">Reset</v-btn>
                     </div>
                 </div>
 
-                <p>Please choose the nodes you want to monitor from the list bellow.</p>
+                <p>
+                    Please choose the nodes you want to monitor from the list bellow.
+                    There are total <strong>{{ nodes.length }}</strong> nodes in the THORChain network.
+                </p>
 
                 <div>
                     <v-text-field
@@ -63,8 +56,8 @@
         <v-row>
             <v-col>
                 <div class="text-h5">
-                    THORChain nodes
-                    <span class="text--disabled">({{ nodes.length }})</span>
+                    Nodes
+                    <span class="text--disabled">({{ availableNodes.length }})</span>
 
                     <v-btn :disabled="loadingNodes" @click="loadNodes" class="ml-2" small>
                         <v-icon>mdi-reload</v-icon>
@@ -103,7 +96,6 @@
                     </div>
                 </div>
             </v-col>
-
 
             <v-col>
                 <div class="text-h5">
@@ -153,9 +145,11 @@
 import axios from "axios";
 import NodeListItem from "../components/NodeListItem";
 import {APIConnector, SettingsStorageMixin, TokenStore} from "../service/api";
+import {eventBus, EVENTS} from "../service/bus";
 
 const NODE_URL = 'https://midgard.thorchain.info/v2/thorchain/nodes'
 const THORDIV = 1e-8
+
 // const KEY_WATCH_LIST = 'watchList'
 
 function sortNodes(nodes) {
@@ -173,12 +167,12 @@ export default {
             loadingNodes: false,
             searchString: '',
             savedAlertActive: false,
+            errorAlertActive: false,
             filterCondition: 'all',
         }
     },
     async mounted() {
         await this.loadNodes()
-        // this.watchlistAddresses = this.$ls.get(KEY_WATCH_LIST, [])
     },
     methods: {
         addAll() {
@@ -232,9 +226,8 @@ export default {
         },
         async actionSave() {
             const api = new APIConnector()
-            if(await api.saveSettings()) {
-                this.savedAlertActive = true
-            }
+            const result = await api.saveSettings()
+            eventBus.$emit(EVENTS.PRESENT_SAVE_RESULT, result)
         },
     },
     computed: {

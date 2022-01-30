@@ -1,9 +1,12 @@
 import axios from "axios";
 import Vue from "vue";
 import _ from "lodash";
+import {eventBus, EVENTS} from "./bus";
 
 const DEV_URL = 'http://127.0.0.1:8088'
 const PROD_RUL = 'https://settings.thornode.org'
+
+export const KEY_MESSENGER = '_messenger'
 
 export const TokenStore = Vue.observable({
     token: '',
@@ -21,7 +24,8 @@ export const TokenStore = Vue.observable({
     original: {
         settings: {},
         nodesList: []
-    }
+    },
+    loadIteration: 0
 })
 
 export const SettingsStorageMixin = {
@@ -45,7 +49,7 @@ export const SettingsStorageMixin = {
             return !_.isEqual(TokenStore.settings, TokenStore.original.settings)
         },
         isNodeListUpdated() {
-            return !_.isEqual(TokenStore.nodesList, TokenStore.original.nodesList)
+            return !_.isEqual(new Set(TokenStore.nodesList), new Set(TokenStore.original.nodesList))
         },
         isAnythingUpdated() {
             return this.isSettingsUpdated || this.isNodeListUpdated
@@ -76,7 +80,9 @@ export class APIConnector {
                 TokenStore.nodesList = j['nodes']
                 TokenStore.original.settings = _.cloneDeep(TokenStore.settings)
                 TokenStore.original.nodesList = _.cloneDeep(TokenStore.nodesList)
-                TokenStore.messenger = TokenStore.settings['_messenger']
+                TokenStore.messenger = _.cloneDeep(TokenStore.settings[KEY_MESSENGER])
+
+                eventBus.$emit(EVENTS.ON_SETTINGS_LOADED, '')
             }
         } finally {
             TokenStore.loading = false
@@ -94,6 +100,7 @@ export class APIConnector {
     async _writeSettings() {
         TokenStore.loading = true
         try {
+            TokenStore.settings[KEY_MESSENGER] = TokenStore.messenger
             const settings = {
                 settings: TokenStore.settings,
                 nodes: TokenStore.nodesList,
