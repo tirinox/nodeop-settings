@@ -146,12 +146,20 @@
                     </template>
                 </v-switch>
 
-            </v-col>
-        </v-row>
+                <p>
+                    In case the node changes its IP address.
+                </p>
 
-        <v-row>
-            <v-col class="mt-5">
-                <code>{{ JSON.stringify(convertedSettings, null, 4) }}</code>
+                <v-divider></v-divider>
+
+                <p class="my-6">
+                    <small>
+                    If you have ideas for new types of notifications or want to report bugs, write to Discord:
+
+                    <code>{{ myDiscord }}</code><CopyButton :content="myDiscord"></CopyButton>
+                    </small>
+                </p>
+
             </v-col>
         </v-row>
     </div>
@@ -163,10 +171,11 @@ import {APIConnector, SettingsStorageMixin, TokenStore} from "../service/api";
 import {eventBus, EVENTS} from "../service/bus";
 import {secondsToConvenientString, SliderConverter} from "../service/utils";
 import PausedLabel from "../components/PausedLabel";
+import CopyButton from "../components/CopyButton";
 
 export default {
     name: "AlertsPage",
-    components: {PausedLabel},
+    components: {CopyButton, PausedLabel},
     mixins: [SettingsStorageMixin],
     data() {
         return {
@@ -187,6 +196,8 @@ export default {
             heightInterval: 2400,
             heightInterval_raw: 2400,
             addressIPOn: true,
+
+            myDiscord: 'Old1#0517'
         }
     },
     computed: {

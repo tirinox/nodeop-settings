@@ -98,6 +98,7 @@ export default {
             const api = new APIConnector()
             api.setToken(token)
             await api.readSettings()
+            eventBus.$emit(EVENTS.ON_SETTINGS_LOADED, true)
         },
     },
     mounted() {

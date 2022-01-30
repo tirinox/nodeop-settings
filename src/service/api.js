@@ -1,7 +1,6 @@
 import axios from "axios";
 import Vue from "vue";
 import _ from "lodash";
-import {eventBus, EVENTS} from "./bus";
 import {simpleClone} from "./utils";
 
 const DEV_URL = 'http://127.0.0.1:8088'
@@ -54,8 +53,7 @@ export const SettingsStorageMixin = {
             const s1 = simpleClone(TokenStore.settings)
             const s2 = simpleClone(TokenStore.original.settings)
             const eq = _.isEqual(s1, s2)
-            console.log("isSettingsUpdated: current = ", s1, "\n", "original = ", s2, "\n", `EQ = ${eq}`)
-            return eq
+            return !eq
         },
         isNodeListUpdated() {
             return !_.isEqual(new Set(TokenStore.nodesList), new Set(TokenStore.original.nodesList))
@@ -87,11 +85,11 @@ export class APIConnector {
             } else {
                 TokenStore.settings = j['settings']
                 TokenStore.nodesList = j['nodes']
+
+                TokenStore.messenger = _.cloneDeep(TokenStore.settings[KEY_MESSENGER])
+                delete TokenStore.settings[KEY_MESSENGER]
                 TokenStore.original.settings = _.cloneDeep(TokenStore.settings)
                 TokenStore.original.nodesList = _.cloneDeep(TokenStore.nodesList)
-                TokenStore.messenger = _.cloneDeep(TokenStore.settings[KEY_MESSENGER])
-
-                eventBus.$emit(EVENTS.ON_SETTINGS_LOADED, '')
             }
         } finally {
             TokenStore.loading = false

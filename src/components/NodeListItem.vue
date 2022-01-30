@@ -9,8 +9,6 @@
                 :color="colorClass"
                 light
             >
-<!--                <v-icon v-if="watched" class="eye" large>mdi-eye</v-icon>-->
-
                 <v-icon v-show="copied" :class="textColorClass">mdi-check-circle-outline</v-icon>
                 <span v-show="!copied" :class="textColorClass">{{ node.initials }}</span>
 
