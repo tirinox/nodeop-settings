@@ -8,7 +8,13 @@
                 elevation="24"
                 v-model="savedAlertActive"
             >
-                Your watchlist saved.
+                <div v-if="savedAlertKind === 'alerts'">
+                    Your preferences are saved.
+                </div>
+                <div v-if="savedAlertKind === 'node_list'">
+                    Your watchlist is saved.
+                </div>
+
             </v-snackbar>
 
             <v-snackbar
@@ -88,6 +94,7 @@ export default {
         return {
             drawer: true,
             savedAlertActive: false,
+            savedAlertKind: 'f',
             errorAlertActive: false,
         }
     },
@@ -120,7 +127,8 @@ export default {
                 return confirmationMessage; //Gecko + Webkit, Safari, Chrome etc.
             })
         }
-        eventBus.$on(EVENTS.PRESENT_SAVE_RESULT, (result) => {
+        eventBus.$on(EVENTS.PRESENT_SAVE_RESULT, ({result, kind}) => {
+            this.savedAlertKind = kind
             if(result) {
                 this.savedAlertActive = true
             } else {

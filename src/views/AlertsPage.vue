@@ -273,7 +273,7 @@ export default {
         async actionSave() {
             const api = new APIConnector()
             const result = await api.saveSettings()
-            eventBus.$emit(EVENTS.PRESENT_SAVE_RESULT, result)
+            eventBus.$emit(EVENTS.PRESENT_SAVE_RESULT, {result, kind: 'alerts'})
         },
     },
     watch: {
