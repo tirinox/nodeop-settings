@@ -3,8 +3,8 @@ import Vue from "vue";
 import _ from "lodash";
 import {simpleClone} from "./utils";
 
-const DEV_URL = 'http://127.0.0.1:8088'
-const PROD_RUL = 'https://settings.thornode.org'
+// const DEV_URL = 'http://127.0.0.1:8088'
+// const PROD_RUL = 'https://settings.thornode.org'
 
 export const KEY_MESSENGER = '_messenger'
 
@@ -67,7 +67,7 @@ export const SettingsStorageMixin = {
 
 export class APIConnector {
     constructor() {
-        this.url = process.env.NODE_ENV === 'development' ? DEV_URL : PROD_RUL
+        this.url = '' // process.env.NODE_ENV === 'development' ? DEV_URL : PROD_RUL
     }
 
     settingsUrl() {
@@ -79,7 +79,7 @@ export class APIConnector {
         try {
             const response = await axios.get(this.settingsUrl())
             const j = response.data
-            if (j['error']) {
+            if (response.status !== 200 || j['error']) {
                 TokenStore.isError = true
                 TokenStore.errorText = j['error']
             } else {
@@ -91,6 +91,9 @@ export class APIConnector {
                 TokenStore.original.settings = _.cloneDeep(TokenStore.settings)
                 TokenStore.original.nodesList = _.cloneDeep(TokenStore.nodesList)
             }
+        } catch (e) {
+            TokenStore.isError = true
+            TokenStore.errorText = 'network error'
         } finally {
             TokenStore.loading = false
         }
