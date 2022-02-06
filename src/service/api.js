@@ -3,8 +3,8 @@ import Vue from "vue";
 import _ from "lodash";
 import {simpleClone} from "./utils";
 
-// const DEV_URL = 'http://127.0.0.1:8088'
-// const PROD_RUL = 'https://settings.thornode.org'
+const DEV_URL = 'http://127.0.0.1:8077'
+const PROD_RUL = ''  // same domain
 
 export const KEY_MESSENGER = '_messenger'
 
@@ -67,7 +67,7 @@ export const SettingsStorageMixin = {
 
 export class APIConnector {
     constructor() {
-        this.url = '' // process.env.NODE_ENV === 'development' ? DEV_URL : PROD_RUL
+        this.url = process.env.NODE_ENV === 'development' ? DEV_URL : PROD_RUL
     }
 
     settingsUrl() {
@@ -75,27 +75,37 @@ export class APIConnector {
     }
 
     async readSettings() {
-        TokenStore.loading = true
+        const s = TokenStore
+        s.loading = true
         try {
             const response = await axios.get(this.settingsUrl())
             const j = response.data
             if (response.status !== 200 || j['error']) {
-                TokenStore.isError = true
-                TokenStore.errorText = j['error']
+                s.isError = true
+                s.errorText = j['error']
             } else {
-                TokenStore.settings = j['settings']
-                TokenStore.nodesList = j['nodes']
+                s.settings = j['settings']
+                s.nodesList = j['nodes']
 
-                TokenStore.messenger = _.cloneDeep(TokenStore.settings[KEY_MESSENGER])
-                delete TokenStore.settings[KEY_MESSENGER]
-                TokenStore.original.settings = _.cloneDeep(TokenStore.settings)
-                TokenStore.original.nodesList = _.cloneDeep(TokenStore.nodesList)
+                s.messenger = _.cloneDeep(s.settings[KEY_MESSENGER])
+                if (!s.messenger) {
+                    s.messenger = {
+                        platform: 'Unknown_Platform',
+                        name: 'NoName',
+                        username: 'NoUserName',
+                    }
+                }
+                
+                delete s.settings[KEY_MESSENGER]
+                s.original.settings = _.cloneDeep(s.settings)
+                s.original.nodesList = _.cloneDeep(s.nodesList)
             }
         } catch (e) {
-            TokenStore.isError = true
-            TokenStore.errorText = 'network error'
+            console.error(e)
+            s.isError = true
+            s.errorText = 'network error'
         } finally {
-            TokenStore.loading = false
+            s.loading = false
         }
     }
 
