@@ -10,7 +10,7 @@ export const KEY_MESSENGER = '_messenger'
 
 function tokenStoreInitialState() {
     return {
-        token: '',
+        token: '',  // todo: store at localStorage, restore on page reload
         messenger: {
             platform: '',
             username: '',
@@ -95,7 +95,7 @@ export class APIConnector {
                         username: 'NoUserName',
                     }
                 }
-                
+
                 delete s.settings[KEY_MESSENGER]
                 s.original.settings = _.cloneDeep(s.settings)
                 s.original.nodesList = _.cloneDeep(s.nodesList)

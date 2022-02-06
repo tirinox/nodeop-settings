@@ -45,3 +45,11 @@ export class SliderConverter {
         return this.rounding ? Math.round(r) : r
     }
 }
+
+export function defaultBool(x, _default) {
+    return x === undefined ? _default : Boolean(x)
+}
+
+export function defaultNumber(x, _default) {
+    return x === undefined ? _default : Number(x)
+}

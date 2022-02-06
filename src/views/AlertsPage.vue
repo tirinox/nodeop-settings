@@ -154,9 +154,10 @@
 
                 <p class="my-6">
                     <small>
-                    If you have ideas for new types of notifications or want to report bugs, write to Discord:
+                        If you have ideas for new types of notifications or want to report bugs, write to Discord:
 
-                    <code>{{ myDiscord }}</code><CopyButton :content="myDiscord"></CopyButton>
+                        <code>{{ myDiscord }}</code>
+                        <CopyButton :content="myDiscord"></CopyButton>
                     </small>
                 </p>
 
@@ -169,9 +170,11 @@
 
 import {APIConnector, SettingsStorageMixin, TokenStore} from "../service/api";
 import {eventBus, EVENTS} from "../service/bus";
-import {secondsToConvenientString, SliderConverter} from "../service/utils";
+import {defaultBool, defaultNumber, secondsToConvenientString, SliderConverter} from "../service/utils";
 import PausedLabel from "../components/PausedLabel";
 import CopyButton from "../components/CopyButton";
+
+const HOUR = 3600
 
 export default {
     name: "AlertsPage",
@@ -241,26 +244,27 @@ export default {
             const store = TokenStore.settings
             console.info('Loading settings to Alerts form: ', store)
 
-            this.allPaused = Boolean(store["nop:pause_all:on"])
+            this.allPaused = defaultBool(store["nop:pause_all:on"], false)
 
-            this.slashOn = Boolean(store["nop:slash:on"])
-            this.slashThreshold = Number(store["nop:slash:threshold"])
-            this.slashPeriod = Number(store["nop:slash:period"])
+            this.slashOn = defaultBool(store["nop:slash:on"], true)
+            this.slashThreshold = defaultNumber(store["nop:slash:threshold"], 100)
 
-            this.newVersionOn = Boolean(store["nop:new_v:on"])
-            this.myVersionOn = Boolean(store["nop:version:on"])
+            this.slashPeriod = defaultNumber(store["nop:slash:period"], 2 * HOUR)
 
-            this.offlineOn = Boolean(store["nop:offline:on"])
-            this.offlineInterval = Number(store["nop:offline:interval"])
+            this.newVersionOn = defaultBool(store["nop:new_v:on"], true)
+            this.myVersionOn = defaultBool(store["nop:version:on"], true)
 
-            this.churningOn = Boolean(store["nop:churning:on"])
+            this.offlineOn = defaultBool(store["nop:offline:on"], true)
+            this.offlineInterval = defaultNumber(store["nop:offline:interval"], 2 * HOUR)
 
-            this.bondOn = Boolean(store["nop:bond:on"])
+            this.churningOn = defaultBool(store["nop:churning:on"], true)
 
-            this.heightOn = Boolean(store["nop:height:on"])
-            this.heightInterval = Number(store["nop:height:interval"])
+            this.bondOn = defaultBool(store["nop:bond:on"], true)
 
-            this.addressIPOn = Boolean(store["nop:ip:on"])
+            this.heightOn = defaultBool(store["nop:height:on"], true)
+            this.heightInterval = defaultNumber(store["nop:height:interval"], HOUR)
+
+            this.addressIPOn = defaultBool(store["nop:ip:on"], true)
 
             this.convertSlidersToInternal()
         },
