@@ -100,10 +100,14 @@ export default {
     },
     methods: {
         async loadToken() {
+            const api = new APIConnector()
+
             const urlParams = new URLSearchParams(window.location.search);
             const token = urlParams.get('token')
-            const api = new APIConnector()
-            api.setToken(token)
+            if(token) {
+                api.setToken(token)
+            }
+
             await api.readSettings()
             eventBus.$emit(EVENTS.ON_SETTINGS_LOADED, true)
         },

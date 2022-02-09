@@ -6,11 +6,13 @@ import {simpleClone} from "./utils";
 const DEV_URL = 'http://127.0.0.1:8077'
 const PROD_RUL = ''  // same domain
 
+const LS_TOKEN_KEY = 'settingsToken'
+
 export const KEY_MESSENGER = '_messenger'
 
 function tokenStoreInitialState() {
     return {
-        token: '',  // todo: store at localStorage, restore on page reload
+        token: '',
         messenger: {
             platform: '',
             username: '',
@@ -68,6 +70,15 @@ export const SettingsStorageMixin = {
 export class APIConnector {
     constructor() {
         this.url = process.env.NODE_ENV === 'development' ? DEV_URL : PROD_RUL
+        TokenStore.token = this.locallySavedToken()
+    }
+
+    locallySavedToken() {
+        return Vue.ls.get(LS_TOKEN_KEY, '')
+    }
+
+    saveTokenLocally() {
+        Vue.ls.set(LS_TOKEN_KEY, TokenStore.token)
     }
 
     settingsUrl() {
@@ -99,6 +110,8 @@ export class APIConnector {
                 delete s.settings[KEY_MESSENGER]
                 s.original.settings = _.cloneDeep(s.settings)
                 s.original.nodesList = _.cloneDeep(s.nodesList)
+
+                this.saveTokenLocally()
             }
         } catch (e) {
             console.error(e)
@@ -164,6 +177,7 @@ export class APIConnector {
 
     purgeData() {
         Object.assign(TokenStore, tokenStoreInitialState())
+        this.saveTokenLocally()
     }
 
     setToken(token) {

@@ -152,6 +152,25 @@
 
                 <v-divider></v-divider>
 
+                <v-switch v-model="bondOn" inset>
+                    <template v-slot:label>Bond change
+                        <PausedLabel v-if="allPaused"/>
+                    </template>
+                </v-switch>
+
+                <p>
+                    If the bond size of a node changes.
+                </p>
+
+                <v-divider></v-divider>
+
+                <div class="float-end pt-2" v-if="isSettingsUpdated">
+                    <v-btn color="primary" large class="mx-2" @click="actionSave">Save</v-btn>
+                    <v-btn color="secondary" large class="mx-2" @click="actionReset">Reset</v-btn>
+                </div>
+
+                <v-divider></v-divider>
+
                 <p class="my-6">
                     <small>
                         If you have ideas for new types of notifications or want to report bugs, write to Discord:
