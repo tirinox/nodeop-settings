@@ -15,8 +15,8 @@
                 </v-switch>
 
                 <p>
-                    If you want, you can temporary pause all kinds of Node notifications
-                    without disabling them or removing nodes from the list.
+                    If you wish, you can temporarily pause
+                    all types of notifications without disabling individual items or clearing the tracking list.
                 </p>
 
                 <v-divider></v-divider>
@@ -39,7 +39,7 @@
                 </v-switch>
 
                 <p>
-                    We will offer you an update to the new version if one becomes available online.
+                    You will be notified if a new version of the software is available on the network.
                 </p>
 
                 <v-switch v-model="myVersionOn" inset>
@@ -124,7 +124,7 @@
                     If your node does not scan blocks longer than this interval,
                     you will get a notification about it.
                     If the threshold interval is less than the typical block time for the blockchain,
-                    it will be increased to 150% of the typical time (15 minutes for BTC).
+                    it will be increased to 150% of the typical time (for instance 15 minutes for BTC).
                 </p>
 
                 <v-slider
@@ -159,7 +159,7 @@
                 </v-switch>
 
                 <p>
-                    If the bond size of a node changes.
+                    If the bond size of the node changes.
                 </p>
 
                 <v-divider></v-divider>
@@ -173,7 +173,7 @@
 
                 <p class="my-6">
                     <small>
-                        If you have ideas for new types of notifications or want to report bugs, write to Discord:
+                        If you have ideas for new types of notifications or want to report bugs, write to my Discord:
 
                         <code>{{ myDiscord }}</code>
                         <CopyButton :content="myDiscord"></CopyButton>
