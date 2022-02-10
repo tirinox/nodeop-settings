@@ -53,3 +53,7 @@ export function defaultBool(x, _default) {
 export function defaultNumber(x, _default) {
     return x === undefined ? _default : Number(x)
 }
+
+export function capitalizeFirstLetter(string) {
+    return string.charAt(0).toUpperCase() + string.slice(1);
+}

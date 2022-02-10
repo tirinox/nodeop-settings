@@ -10,8 +10,9 @@
             <v-alert type="info" dense>
                 <div class="my-1">
                     <p>You are currently configuring:</p>
-                    <div class="text-h5">{{ messengerInfo.platform }}
-                        (@{{ messengerInfo.username }}, {{ messengerInfo.name }})
+                    <div class="text-h5">{{ messengerInfo.platform | capitalizeFirstLetter }}
+                        (channel: <strong>#{{ messengerInfo.name }}</strong>,
+                        user: <strong>{{ messengerInfo.username }}</strong>)
                     </div>
                 </div>
             </v-alert>
@@ -86,6 +87,7 @@
 import {APIConnector, SettingsStorageMixin} from "../service/api";
 import {eventBus, EVENTS} from "../service/bus";
 import DialogConfirmRevokeLink from "../components/DialogConfirmRevokeLink";
+import {capitalizeFirstLetter} from "../service/utils";
 
 export default {
     name: "WelcomePage",
@@ -101,6 +103,7 @@ export default {
             confirmRevokeDialog: false,
         }
     },
+    filters: {capitalizeFirstLetter},
     created() {
         this.URL_SLACK = 'https://slack.com/oauth/v2/authorize?client_id=2687560270260.2682403425669&scope=channels:history,chat:write,commands,im:history,incoming-webhook,reactions:write,users:read,users.profile:read&user_scope='
         this.URL_TELEGRAM = 'https://t.me/thor_infobot'

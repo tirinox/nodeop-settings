@@ -3,7 +3,7 @@ import Vue from "vue";
 import _ from "lodash";
 import {simpleClone} from "./utils";
 
-const DEV_URL = 'http://127.0.0.1:8077'
+const DEV_URL = 'http://127.0.0.1:8088'
 const PROD_RUL = ''  // same domain
 
 const LS_TOKEN_KEY = 'settingsToken'
