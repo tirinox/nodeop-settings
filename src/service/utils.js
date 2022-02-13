@@ -24,6 +24,15 @@ export function secondsToConvenientString(t) {
     return out
 }
 
+export function closestValue(goal, array) {
+    if (!array) {
+        return goal
+    }
+    return array.reduce(function (prev, curr) {
+        return (Math.abs(curr - goal) < Math.abs(prev - goal) ? curr : prev);
+    });
+}
+
 export class SliderConverter {
     constructor(minValue, maxValue, polynomial, rounding) {
         this.polynomial = polynomial || 3.0
@@ -32,17 +41,28 @@ export class SliderConverter {
         this.rounding = Boolean(rounding)
     }
 
-    toInternal(x) {
-        const r = 10000.0 * Math.pow(
+    stickTo(x, stickTo) {
+        if (stickTo && Array.isArray(stickTo)) {
+            return closestValue(x, stickTo)
+        }
+        return x
+    }
+
+    toInternal(x, stickTo) {
+        x = this.stickTo(x, stickTo)
+        let r = 10000.0 * Math.pow(
             ((Number(x) - this.minValue) / (this.maxValue - this.minValue)),
             1.0 / this.polynomial
         )
-        return this.rounding ? Math.round(r) : r
+        r = this.rounding ? Math.round(r) : r
+        return r
     }
 
-    toExternal(x) {
-        const r = (this.maxValue - this.minValue) * Math.pow(Number(x) / 10000.0, this.polynomial) + this.minValue
-        return this.rounding ? Math.round(r) : r
+    toExternal(x, stickTo) {
+        let r = (this.maxValue - this.minValue) * Math.pow(Number(x) / 10000.0, this.polynomial) + this.minValue
+        r = this.rounding ? Math.round(r) : r
+        r = this.stickTo(r, stickTo)
+        return r
     }
 }
 

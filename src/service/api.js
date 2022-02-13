@@ -70,7 +70,10 @@ export const SettingsStorageMixin = {
 export class APIConnector {
     constructor() {
         this.url = process.env.NODE_ENV === 'development' ? DEV_URL : PROD_RUL
-        TokenStore.token = this.locallySavedToken()
+        const t = TokenStore.token = this.locallySavedToken()
+        if (t) {
+            console.info('token = ', t)
+        }
     }
 
     locallySavedToken() {
@@ -88,6 +91,7 @@ export class APIConnector {
     async readSettings() {
         const s = TokenStore
         s.loading = true
+
         try {
             const response = await axios.get(this.settingsUrl())
             const j = response.data
@@ -110,6 +114,8 @@ export class APIConnector {
                 delete s.settings[KEY_MESSENGER]
                 s.original.settings = _.cloneDeep(s.settings)
                 s.original.nodesList = _.cloneDeep(s.nodesList)
+
+                console.debug('readSettings()', simpleClone(s))
 
                 this.saveTokenLocally()
             }

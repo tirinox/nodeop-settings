@@ -189,11 +189,24 @@
 
 import {APIConnector, SettingsStorageMixin, TokenStore} from "../service/api";
 import {eventBus, EVENTS} from "../service/bus";
-import {defaultBool, defaultNumber, secondsToConvenientString, SliderConverter} from "../service/utils";
+import {defaultBool, defaultNumber, secondsToConvenientString, simpleClone, SliderConverter} from "../service/utils";
 import PausedLabel from "../components/PausedLabel";
 import CopyButton from "../components/CopyButton";
 
 const HOUR = 3600
+const STD_INTERVALS = {
+    '2m': 120,
+    '5m': 300,
+    '15m': 900,
+    '30m': 1800,
+    '60m': 3600,
+    '2h': 7200,
+    '6h': 21600,
+    '12h': 43200,
+    '24h': 86400,
+    '3d': 259200
+}
+const STD_INTERVALS_ONLY_SEC = Object.values(STD_INTERVALS)
 
 export default {
     name: "AlertsPage",
@@ -228,15 +241,15 @@ export default {
                 "nop:pause_all:on": this.allPaused,
                 "nop:slash:on": this.slashOn,
                 "nop:slash:threshold": this.sliderSlashThreshold.toExternal(this.slashThreshold_raw),
-                "nop:slash:period": this.slider2Day.toExternal(this.slashPeriod_raw),
+                "nop:slash:period": this.slider3Day.toExternal(this.slashPeriod_raw, STD_INTERVALS_ONLY_SEC),
                 "nop:new_v:on": this.newVersionOn,
                 "nop:version:on": this.myVersionOn,
                 "nop:offline:on": this.offlineOn,
-                "nop:offline:interval": this.slider2Day.toExternal(this.offlineInterval_raw),
+                "nop:offline:interval": this.slider3Day.toExternal(this.offlineInterval_raw),
                 "nop:churning:on": this.churningOn,
                 "nop:bond:on": this.bondOn,
                 "nop:height:on": this.heightOn,
-                "nop:height:interval": this.slider2Day.toExternal(this.heightInterval_raw),
+                "nop:height:interval": this.slider3Day.toExternal(this.heightInterval_raw),
                 "nop:ip:on": this.addressIPOn,
             }
         }
@@ -247,21 +260,21 @@ export default {
     methods: {
         convertSlidersToInternal() {
             this.slashThreshold_raw = this.sliderSlashThreshold.toInternal(this.slashThreshold)
-            this.slashPeriod_raw = this.slider2Day.toInternal(this.slashPeriod)
-            this.offlineInterval_raw = this.slider2Day.toInternal(this.offlineInterval)
-            this.heightInterval_raw = this.slider2Day.toInternal(this.heightInterval)
+            this.slashPeriod_raw = this.slider3Day.toInternal(this.slashPeriod, STD_INTERVALS_ONLY_SEC)
+            this.offlineInterval_raw = this.slider3Day.toInternal(this.offlineInterval)
+            this.heightInterval_raw = this.slider3Day.toInternal(this.heightInterval)
         },
 
         convertSlidersToExternal() {
             this.slashThreshold = this.sliderSlashThreshold.toExternal(this.slashThreshold_raw)
-            this.slashPeriod = this.slider2Day.toExternal(this.slashPeriod_raw)
-            this.offlineInterval = this.slider2Day.toExternal(this.offlineInterval_raw)
-            this.heightInterval = this.slider2Day.toExternal(this.heightInterval_raw)
+            this.slashPeriod = this.slider3Day.toExternal(this.slashPeriod_raw, STD_INTERVALS_ONLY_SEC)
+            this.offlineInterval = this.slider3Day.toExternal(this.offlineInterval_raw)
+            this.heightInterval = this.slider3Day.toExternal(this.heightInterval_raw)
         },
 
         onLoadedSettingsFromServer() {
             const store = TokenStore.settings
-            console.info('Loading settings to Alerts form: ', store)
+            console.info('Loading settings to Alerts form: ', simpleClone(store))
 
             this.allPaused = defaultBool(store["nop:pause_all:on"], false)
 
@@ -307,16 +320,17 @@ export default {
         }
     },
     beforeCreate() {
-        this.slider2Day = new SliderConverter(60, 2 * 60 * 60 * 24, 3, true)
+        this.slider3Day = new SliderConverter(60, 3 * HOUR * 24, 3, true)
         this.sliderSlashThreshold = new SliderConverter(1, 20000, 3, true)
 
-        eventBus.$on(EVENTS.ON_SETTINGS_LOADED, this.onLoadedSettingsFromServer)
+
     },
     created() {
-        this.onLoadedSettingsFromServer()
+        eventBus.$on(EVENTS.ON_SETTINGS_LOADED, this.onLoadedSettingsFromServer)
+        // this.onLoadedSettingsFromServer()
     },
     beforeDestroy() {
-        // eventBus.$off(EVENTS.ON_SETTINGS_LOADED, this.onLoadedSettingsFromServer)
+        eventBus.$off(EVENTS.ON_SETTINGS_LOADED, this.onLoadedSettingsFromServer)
     },
 }
 </script>

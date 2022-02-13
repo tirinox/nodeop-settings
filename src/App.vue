@@ -109,7 +109,7 @@ export default {
             }
 
             await api.readSettings()
-            eventBus.$emit(EVENTS.ON_SETTINGS_LOADED, true)
+            eventBus.$emit(EVENTS.ON_SETTINGS_LOADED)
         },
     },
     mounted() {
