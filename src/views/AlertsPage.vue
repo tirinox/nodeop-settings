@@ -274,6 +274,10 @@ export default {
 
         onLoadedSettingsFromServer() {
             const store = TokenStore.settings
+            if(!store) {
+                console.warn('No settings store..')
+                return
+            }
             console.info('Loading settings to Alerts form: ', simpleClone(store))
 
             this.allPaused = defaultBool(store["nop:pause_all:on"], false)
@@ -322,12 +326,10 @@ export default {
     beforeCreate() {
         this.slider3Day = new SliderConverter(60, 3 * HOUR * 24, 3, true)
         this.sliderSlashThreshold = new SliderConverter(1, 20000, 3, true)
-
-
     },
     created() {
         eventBus.$on(EVENTS.ON_SETTINGS_LOADED, this.onLoadedSettingsFromServer)
-        // this.onLoadedSettingsFromServer()
+        this.onLoadedSettingsFromServer()
     },
     beforeDestroy() {
         eventBus.$off(EVENTS.ON_SETTINGS_LOADED, this.onLoadedSettingsFromServer)
