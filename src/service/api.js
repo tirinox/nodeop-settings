@@ -51,6 +51,9 @@ export const SettingsStorageMixin = {
         messengerInfo() {
             return TokenStore.messenger
         },
+        isSlack() {
+            return String(TokenStore.messenger.platform).toLowerCase() === 'slack'
+        },
         isSettingsUpdated() {
             const s1 = simpleClone(TokenStore.settings)
             const s2 = simpleClone(TokenStore.original.settings)

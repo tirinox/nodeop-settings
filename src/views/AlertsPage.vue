@@ -21,17 +21,19 @@
 
                 <v-divider></v-divider>
 
-                <v-switch v-model="generalAlertsOn" inset>
-                    <template v-slot:label>
-                        General Alerts 🆕
-                        <PausedLabel v-if="allPaused"/>
-                    </template>
-                </v-switch>
+                <div v-show="isSlack">
+                    <v-switch v-model="generalAlertsOn" inset>
+                        <template v-slot:label>
+                            General Alerts 🆕
+                            <PausedLabel v-if="allPaused"/>
+                        </template>
+                    </v-switch>
 
-                <p>🆕 General alerts include price updates, large transactions, and daily summaries of statistics.
-                    Just like in the Telegram channel.</p>
+                    <p>🆕 General alerts include price updates, large transactions, and daily summaries of statistics.
+                        Just like in the Telegram channel.</p>
 
-                <v-divider></v-divider>
+                    <v-divider></v-divider>
+                </div>
 
                 <v-switch v-model="churningOn" inset>
                     <template v-slot:label>
@@ -289,7 +291,7 @@ export default {
 
         onLoadedSettingsFromServer() {
             const store = TokenStore.settings
-            if(!store) {
+            if (!store) {
                 console.warn('No settings store..')
                 return
             }
