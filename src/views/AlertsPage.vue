@@ -21,6 +21,18 @@
 
                 <v-divider></v-divider>
 
+                <v-switch v-model="generalAlertsOn" inset>
+                    <template v-slot:label>
+                        General Alerts 🆕
+                        <PausedLabel v-if="allPaused"/>
+                    </template>
+                </v-switch>
+
+                <p>🆕 General alerts include price updates, large transactions, and daily summaries of statistics.
+                    Just like in the Telegram channel.</p>
+
+                <v-divider></v-divider>
+
                 <v-switch v-model="churningOn" inset>
                     <template v-slot:label>
                         Churning
@@ -232,6 +244,8 @@ export default {
             heightInterval_raw: 2400,
             addressIPOn: true,
 
+            generalAlertsOn: false,
+
             myDiscord: 'Old1#0517'
         }
     },
@@ -251,6 +265,7 @@ export default {
                 "nop:height:on": this.heightOn,
                 "nop:height:interval": this.slider3Day.toExternal(this.heightInterval_raw),
                 "nop:ip:on": this.addressIPOn,
+                "gen:alerts": this.generalAlertsOn,
             }
         }
     },
@@ -301,6 +316,7 @@ export default {
             this.heightInterval = defaultNumber(store["nop:height:interval"], HOUR)
 
             this.addressIPOn = defaultBool(store["nop:ip:on"], true)
+            this.generalAlertsOn = defaultBool(store["gen:alerts"], false)
 
             this.convertSlidersToInternal()
         },
