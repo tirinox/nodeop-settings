@@ -147,7 +147,7 @@ import NodeListItem from "../components/NodeListItem";
 import {APIConnector, SettingsStorageMixin, TokenStore} from "../service/api";
 import {eventBus, EVENTS} from "../service/bus";
 
-const NODE_URL = 'https://midgard.thorchain.info/v2/thorchain/nodes'
+const NODE_URL = 'https://thornode.ninerealms.com/thorchain/nodes'
 const THORDIV = 1e-8
 
 // const KEY_WATCH_LIST = 'watchList'
@@ -188,7 +188,7 @@ export default {
             nodes = nodes.map(n => ({
                 ...n,
                 initials: n.node_address.slice(-4),
-                bond_rune: (parseFloat(n.bond) * THORDIV).toFixed(1)
+                bond_rune: (parseFloat(n.total_bond) * THORDIV).toFixed(1)
             }))
             sortNodes(nodes)
             this.nodes = nodes
