@@ -12,6 +12,7 @@ yarn serve
 
 ### Compiles and minifies for production
 ```
+export NODE_OPTIONS=--openssl-legacy-provider
 yarn build
 ```
 
