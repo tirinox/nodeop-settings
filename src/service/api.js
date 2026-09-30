@@ -91,6 +91,12 @@ export class APIConnector {
         return `${this.url}/api/settings/${TokenStore.token}`
     }
 
+    // THORNode node list, proxied by our backend
+    async loadNodeList() {
+        const response = await axios.get(`${this.url}/api/nodes`)
+        return response.data
+    }
+
     async readSettings() {
         const s = TokenStore
         s.loading = true

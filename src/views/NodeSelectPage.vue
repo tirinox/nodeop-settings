@@ -142,12 +142,10 @@
 
 <script>
 
-import axios from "axios";
 import NodeListItem from "../components/NodeListItem";
 import {APIConnector, SettingsStorageMixin, TokenStore} from "../service/api";
 import {eventBus, EVENTS} from "../service/bus";
 
-const NODE_URL = 'https://thornode.ninerealms.com/thorchain/nodes'
 const THORDIV = 1e-8
 
 // const KEY_WATCH_LIST = 'watchList'
@@ -183,16 +181,20 @@ export default {
         },
         async loadNodes() {
             this.loadingNodes = true
-            const result = await axios.get(NODE_URL)
-            let nodes = result.data
-            nodes = nodes.map(n => ({
-                ...n,
-                initials: n.node_address.slice(-4),
-                bond_rune: (parseFloat(n.total_bond) * THORDIV).toFixed(1)
-            }))
-            sortNodes(nodes)
-            this.nodes = nodes
-            this.loadingNodes = false
+            try {
+                let nodes = await new APIConnector().loadNodeList()
+                nodes = nodes.map(n => ({
+                    ...n,
+                    initials: n.node_address.slice(-4),
+                    bond_rune: (parseFloat(n.total_bond) * THORDIV).toFixed(1)
+                }))
+                sortNodes(nodes)
+                this.nodes = nodes
+            } catch (e) {
+                console.error('Failed to load the node list', e)
+            } finally {
+                this.loadingNodes = false
+            }
         },
         pick({node, watched}) {
             if (watched) {
