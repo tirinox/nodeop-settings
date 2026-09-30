@@ -3,77 +3,75 @@ export function simpleClone(data) {
 }
 
 export function secondsToConvenientString(t) {
-    t = Math.round(t)
+    t = Math.round(Number(t) || 0)
     const seconds = t % 60
     const minutes = Math.floor(t / 60) % 60
     const hours = Math.floor(t / 3600) % 24
     const days = Math.floor(t / 86400)
-    let out = ''
+    const parts = []
     if (days > 0) {
-        out += `${days} day`
+        parts.push(`${days} day${days > 1 ? 's' : ''}`)
     }
     if (hours > 0) {
-        out += ` ${hours} hours`
+        parts.push(`${hours} hour${hours > 1 ? 's' : ''}`)
     }
     if (minutes > 0) {
-        out += ` ${minutes} min`
+        parts.push(`${minutes} min`)
     }
     if (seconds > 0) {
-        out += ` ${seconds} sec`
+        parts.push(`${seconds} sec`)
     }
-    return out
+    return parts.join(' ') || '0 sec'
 }
 
 export function closestValue(goal, array) {
-    if (!array) {
+    if (!array || !array.length) {
         return goal
     }
-    return array.reduce(function (prev, curr) {
-        return (Math.abs(curr - goal) < Math.abs(prev - goal) ? curr : prev);
-    });
+    return array.reduce((prev, curr) => (Math.abs(curr - goal) < Math.abs(prev - goal) ? curr : prev))
 }
 
+// Maps an external value range onto a 0..10000 slider with a polynomial curve,
+// so that small values get more slider resolution.
 export class SliderConverter {
-    constructor(minValue, maxValue, polynomial, rounding) {
-        this.polynomial = polynomial || 3.0
-        this.minValue = minValue || 0
-        this.maxValue = maxValue || 100
+    static RANGE = 10000
+
+    constructor(minValue = 0, maxValue = 100, polynomial = 3.0, rounding = false) {
+        this.polynomial = polynomial
+        this.minValue = minValue
+        this.maxValue = maxValue
         this.rounding = Boolean(rounding)
     }
 
     stickTo(x, stickTo) {
-        if (stickTo && Array.isArray(stickTo)) {
-            return closestValue(x, stickTo)
-        }
-        return x
+        return Array.isArray(stickTo) ? closestValue(x, stickTo) : x
     }
 
     toInternal(x, stickTo) {
         x = this.stickTo(x, stickTo)
-        let r = 10000.0 * Math.pow(
-            ((Number(x) - this.minValue) / (this.maxValue - this.minValue)),
-            1.0 / this.polynomial
-        )
-        r = this.rounding ? Math.round(r) : r
-        return r
+        const normalized = Math.min(1, Math.max(0, (Number(x) - this.minValue) / (this.maxValue - this.minValue)))
+        const r = SliderConverter.RANGE * Math.pow(normalized, 1.0 / this.polynomial)
+        return this.rounding ? Math.round(r) : r
     }
 
     toExternal(x, stickTo) {
-        let r = (this.maxValue - this.minValue) * Math.pow(Number(x) / 10000.0, this.polynomial) + this.minValue
+        let r = (this.maxValue - this.minValue) * Math.pow(Number(x) / SliderConverter.RANGE, this.polynomial) + this.minValue
         r = this.rounding ? Math.round(r) : r
-        r = this.stickTo(r, stickTo)
-        return r
+        return this.stickTo(r, stickTo)
     }
 }
 
-export function defaultBool(x, _default) {
-    return x === undefined ? _default : Boolean(x)
-}
-
-export function defaultNumber(x, _default) {
-    return x === undefined ? _default : Number(x)
-}
-
 export function capitalizeFirstLetter(string) {
-    return string.charAt(0).toUpperCase() + string.slice(1);
+    string = String(string ?? '')
+    return string.charAt(0).toUpperCase() + string.slice(1)
+}
+
+export async function copyToClipboard(text) {
+    try {
+        await navigator.clipboard.writeText(text)
+        return true
+    } catch (e) {
+        console.warn('Clipboard is not available', e)
+        return false
+    }
 }

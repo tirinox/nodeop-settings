@@ -1,17 +1,5 @@
 <template>
-    <span class="mx-1">
-        <v-icon>
-            mdi-pause
-        </v-icon>
-    </span>
+    <v-chip size="x-small" color="warning" variant="tonal" prepend-icon="mdi-pause" class="ml-2">
+        paused
+    </v-chip>
 </template>
-
-<script>
-export default {
-    name: "PausedLabel"
-}
-</script>
-
-<style scoped>
-
-</style>

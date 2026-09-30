@@ -1,113 +1,64 @@
 <template>
-
-    <v-list-item :key="node.node_address">
-        <v-list-item-avatar @click="copyNodeAddress">
-            <v-btn
-                fab
-                small
-                depressed
-                :color="colorClass"
-                light
+    <v-list-item class="py-2" lines="two">
+        <template #prepend>
+            <v-avatar
+                :color="statusColor"
+                size="44"
+                class="cursor-pointer mr-3"
+                :title="`Copy ${node.node_address}`"
+                @click="copy(node.node_address)"
             >
-                <v-icon v-show="copied" :class="textColorClass">mdi-check-circle-outline</v-icon>
-                <span v-show="!copied" :class="textColorClass">{{ node.initials }}</span>
+                <v-icon v-if="copied">mdi-check-circle-outline</v-icon>
+                <span v-else class="text-label-medium font-weight-bold">{{ node.initials }}</span>
+            </v-avatar>
+        </template>
 
-            </v-btn>
-        </v-list-item-avatar>
+        <v-list-item-title class="d-flex align-center">
+            <code class="text-truncate">{{ node.node_address }}</code>
+            <CopyButton :content="node.node_address" class="ml-1 flex-shrink-0"/>
+        </v-list-item-title>
 
-        <v-list-item-content>
-            <v-list-item-title>
-                <code>{{ node.node_address }}</code>
-                <v-icon @click="copyNodeAddress" x-small>
-                    mdi-content-copy
-                </v-icon>
-            </v-list-item-title>
-            <div>
-                <v-chip :color="colorClass" x-small>{{ node.status }} v.{{ node.version }}</v-chip>
-                <span class="ma-2">ᚱ<strong>{{ millify(node.bond_rune) }}</strong> bonded</span>
-            </div>
-        </v-list-item-content>
+        <v-list-item-subtitle class="d-flex align-center flex-wrap ga-2 mt-1">
+            <v-chip :color="statusColor" size="x-small" label>
+                {{ node.status }}<template v-if="node.version">&nbsp;v.{{ node.version }}</template>
+            </v-chip>
+            <span>ᚱ<strong>{{ millify(Number(node.bond_rune) || 0) }}</strong> bonded</span>
+        </v-list-item-subtitle>
 
-        <v-list-item-action>
+        <template #append>
             <v-btn
-                depressed
-                small
-                @click="buttonAction"
-            >
-                <div v-if="watched">
-                    <v-icon color="orange darken-2">
-                        mdi-eye-minus
-                    </v-icon>
-
-                </div>
-                <div v-else>
-                    <v-icon>
-                        mdi-eye-plus
-                    </v-icon>
-                </div>
-            </v-btn>
-        </v-list-item-action>
+                :icon="watched ? 'mdi-eye-minus' : 'mdi-eye-plus'"
+                :color="watched ? 'orange-darken-2' : 'primary'"
+                :aria-label="watched ? 'Remove from watchlist' : 'Add to watchlist'"
+                variant="tonal"
+                size="small"
+                @click="emit('pick', {node, watched})"
+            />
+        </template>
     </v-list-item>
 </template>
 
-<script>
+<script setup>
+import {computed} from 'vue'
+import {millify} from 'millify'
+import CopyButton from './CopyButton.vue'
+import {useCopy} from '@/composables/useCopy'
 
-import copy from 'copy-text-to-clipboard'
-import millify from "millify";
+const props = defineProps({
+    node: {type: Object, required: true},
+    watched: {type: Boolean, default: false},
+})
 
-export default {
-    name: "NodeListItem",
-    props: ['node', 'watched'],
-    computed: {
-        colorClass() {
-            const st = this.node.status
-            if (st === 'Active') {
-                return 'green'
-            } else if (st === 'Standby') {
-                return 'amber darken-1'
-            } else if (st === 'Disabled') {
-                return 'red'
-            } else if (st === 'Whitelisted') {
-                return 'gray darken-1'
-            } else {
-                return 'purple'
-            }
-        },
-        textColorClass() {
-            if(this.node.status === 'Whitelisted') {
-                return 'blacl--text'
-            } else {
-                return 'white--text'
-            }
-        }
-    },
-    data() {
-        return {
-            copied: false,
-        }
-    },
-    methods: {
-        buttonAction() {
-            this.$emit('pick', {
-                node: this.node, watched: this.watched
-            })
-        },
-        millify,
-        copyNodeAddress() {
-            copy(this.node.node_address)
-            this.copied = true
-            setInterval(() => {
-                this.copied = false
-            }, 2000)
-        },
-    }
+const emit = defineEmits(['pick'])
+
+const {copied, copy} = useCopy()
+
+const STATUS_COLORS = {
+    Active: 'green',
+    Standby: 'amber-darken-1',
+    Disabled: 'red',
+    Whitelisted: 'grey-darken-1',
 }
-</script>
 
-<style scoped>
-    .eye {
-        position: absolute;
-        opacity: 20%;
-        left: auto;
-    }
-</style>
+const statusColor = computed(() => STATUS_COLORS[props.node.status] ?? 'purple')
+</script>

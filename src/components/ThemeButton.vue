@@ -1,47 +1,30 @@
 <template>
-    <div>
-        <v-tooltip v-if="!$vuetify.theme.dark" bottom>
-            <template v-slot:activator="{ on }">
-                <v-icon class="mr-1" v-on="on" @click="darkMode">mdi-moon-waxing-crescent</v-icon>
-            </template>
-            <span>Dark Mode On</span>
-        </v-tooltip>
-
-        <v-tooltip v-else bottom>
-            <template v-slot:activator="{ on }">
-                <v-icon color="yellow" v-on="on" @click="darkMode">mdi-white-balance-sunny</v-icon>
-            </template>
-            <span>Dark Mode Off</span>
-        </v-tooltip>
-    </div>
+    <v-tooltip :text="isDark ? 'Dark Mode Off' : 'Dark Mode On'" location="bottom">
+        <template #activator="{ props }">
+            <v-btn
+                v-bind="props"
+                :icon="isDark ? 'mdi-white-balance-sunny' : 'mdi-moon-waxing-crescent'"
+                :color="isDark ? 'yellow' : undefined"
+                variant="text"
+                @click="toggle"
+            />
+        </template>
+    </v-tooltip>
 </template>
 
-<script>
+<script setup>
+import {computed} from 'vue'
+import {useTheme} from 'vuetify'
+import {lsSet} from '@/service/storage'
+import {LS_THEME_KEY} from '@/plugins/vuetify'
 
-export default {
-    name: "ThemeButton",
-    data() {
-        return {
-            on: false
-        }
-    },
-    methods: {
-        darkMode() {
-            this.on = !this.on
-        }
-    },
-    watch: {
-        on(v) {
-            this.$vuetify.theme.dark = v
-            this.$ls.set('themeIsDark', v)
-        }
-    },
-    mounted() {
-        this.on = this.$ls.get('themeIsDark', false)
-    }
+const theme = useTheme()
+
+const isDark = computed(() => theme.current.value.dark)
+
+function toggle() {
+    const nextDark = !isDark.value
+    theme.change(nextDark ? 'dark' : 'light')
+    lsSet(LS_THEME_KEY, nextDark)
 }
 </script>
-
-<style scoped>
-
-</style>

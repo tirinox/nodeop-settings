@@ -1,124 +1,102 @@
 <template>
     <div>
-        <div class="text-h2 mt-4">Welcome to the NodeOp tool setup</div>
+        <h1 class="text-display-medium mt-2 mb-6">Welcome to the NodeOp tool setup</h1>
 
-        <div class="my-2" v-if="validConnection">
-            <p>
+        <div v-if="isTokenLoading" class="text-center py-10">
+            <v-progress-circular :size="50" color="amber" indeterminate/>
+        </div>
+
+        <div v-else-if="validConnection" class="d-flex flex-column ga-4">
+            <p class="text-body-large">
                 Here you can set up personal notifications about the status of the nodes you are interested in.
             </p>
 
-            <v-alert type="info" dense>
-                <div class="my-1">
-                    <p>You are currently configuring:</p>
-                    <div class="text-h5">{{ messengerInfo.platform | capitalizeFirstLetter }}
-                        (channel: <strong>#{{ messengerInfo.name }}</strong>,
-                        user: <strong>{{ messengerInfo.username }}</strong>)
-                    </div>
+            <v-alert type="info" variant="tonal" title="You are currently configuring:">
+                <div class="text-headline-small mt-1">
+                    {{ capitalizeFirstLetter(messengerInfo.platform) }}
+                    (channel: <strong>#{{ messengerInfo.name }}</strong>,
+                    user: <strong>{{ messengerInfo.username }}</strong>)
                 </div>
             </v-alert>
 
-            <p>
-                First, go to the "Watchlist" tab to select the desired nodes from the list.
-            </p>
-            <v-btn link to="/select/nodes">
-                <v-icon>mdi-eye-settings-outline</v-icon>
-                Watchlist
-            </v-btn>
-            <p class="mt-4">
-                Then, go to the "Alerts" tab and configure the types of notifications and their settings.
-            </p>
-            <v-btn link to="/alerts">
-                <v-icon>mdi-comment-alert-outline</v-icon>
-                Configure alerts
-            </v-btn>
-            <p class="mt-4">
-                If you no longer need this link or if you have a suspicion of leaking the link to unwanted persons,
-                you can invalidate it. Your settings will still not be affected. You can always create a new link from
-                the messenger.
-            </p>
-            <v-btn color="error" @click="confirmRevokeDialog = true">
-                <v-icon>mdi-cancel</v-icon>
-                Revoke the link
-            </v-btn>
+            <v-row>
+                <v-col cols="12" md="6">
+                    <v-card variant="outlined" class="h-100">
+                        <v-card-item prepend-icon="mdi-numeric-1-circle" title="Pick your nodes"/>
+                        <v-card-text>
+                            First, go to the "Watchlist" tab to select the desired nodes from the list.
+                        </v-card-text>
+                        <v-card-actions>
+                            <v-btn to="/select/nodes" color="primary" variant="flat" prepend-icon="mdi-eye-settings-outline">
+                                Watchlist
+                            </v-btn>
+                        </v-card-actions>
+                    </v-card>
+                </v-col>
+                <v-col cols="12" md="6">
+                    <v-card variant="outlined" class="h-100">
+                        <v-card-item prepend-icon="mdi-numeric-2-circle" title="Tune the alerts"/>
+                        <v-card-text>
+                            Then, go to the "Alerts" tab and configure the types of notifications and their settings.
+                        </v-card-text>
+                        <v-card-actions>
+                            <v-btn to="/alerts" color="primary" variant="flat" prepend-icon="mdi-comment-alert-outline">
+                                Configure alerts
+                            </v-btn>
+                        </v-card-actions>
+                    </v-card>
+                </v-col>
+            </v-row>
+
+            <v-card variant="tonal" color="error">
+                <v-card-item prepend-icon="mdi-link-off" title="Revoke this link"/>
+                <v-card-text>
+                    If you no longer need this link or if you have a suspicion of leaking the link to unwanted persons,
+                    you can invalidate it. Your settings will still not be affected. You can always create a new link
+                    from the messenger.
+                </v-card-text>
+                <v-card-actions>
+                    <v-btn color="error" variant="flat" prepend-icon="mdi-cancel" @click="confirmRevokeDialog = true">
+                        Revoke the link
+                    </v-btn>
+                </v-card-actions>
+            </v-card>
         </div>
 
-        <v-alert
-            class="mt-4"
-            dense
-            border="left"
-            type="error"
-            v-if="!validConnection"
-        >
-            The token is <strong>missing</strong> or it has <strong>expired</strong>.<br>
-            Please generate a new link using THORChain Monitoring Bot inside your favorite messenger
-            (Telegram/Slack/Discord).
+        <v-alert v-else type="error" variant="tonal" border="start" title="No valid setup link">
+            <p class="mt-1">
+                The token is <strong>missing</strong> or it has <strong>expired</strong>.<br>
+                Please generate a new link using THORChain Monitoring Bot inside your favorite messenger
+                (Telegram/Slack/Discord).
+            </p>
 
             <div v-if="tokenErrorText" class="my-2">Error: <code>{{ tokenErrorText }}</code></div>
 
-            <div class="my-3">
-                <v-btn class="mx-2" link :href="this.URL_TELEGRAM" target="_blank">
-                    <v-icon class="mr-1">mdi-send</v-icon>
+            <div class="d-flex flex-wrap ga-2 mt-3">
+                <v-btn :href="URL_TELEGRAM" target="_blank" rel="noopener" prepend-icon="mdi-send" variant="flat">
                     Telegram bot
                 </v-btn>
-                <v-btn class="mx-2" link :href="this.URL_SLACK" target="_blank">
-                    <v-icon class="mr-1">mdi-slack</v-icon>
+                <v-btn :href="URL_SLACK" target="_blank" rel="noopener" prepend-icon="mdi-slack" variant="flat">
                     Slack bot
                 </v-btn>
-                <v-btn class="mx-2" disabled>
-                    <v-icon class="mr-1">mdi-discord</v-icon>
+                <v-btn disabled prepend-icon="mdi-discord" variant="flat">
                     Discord bot (Soon!)
                 </v-btn>
             </div>
-
         </v-alert>
-        <div class="text-center" v-if="isTokenLoading">
-            <v-progress-circular
-                :size="50"
-                color="amber"
-                indeterminate
-            ></v-progress-circular>
-        </div>
 
-        <DialogConfirmRevokeLink v-model="confirmRevokeDialog" @confirmed="onClickRevoke"></DialogConfirmRevokeLink>
+        <DialogConfirmRevokeLink v-model="confirmRevokeDialog" @confirmed="revokeLink"/>
     </div>
 </template>
 
-<script>
-import {APIConnector, SettingsStorageMixin} from "../service/api";
-import {eventBus, EVENTS} from "../service/bus";
-import DialogConfirmRevokeLink from "../components/DialogConfirmRevokeLink";
-import {capitalizeFirstLetter} from "../service/utils";
+<script setup>
+import {ref} from 'vue'
+import DialogConfirmRevokeLink from '@/components/DialogConfirmRevokeLink.vue'
+import {isTokenLoading, messengerInfo, revokeLink, tokenErrorText, validConnection} from '@/service/api'
+import {capitalizeFirstLetter} from '@/service/utils'
 
-export default {
-    name: "WelcomePage",
-    components: {DialogConfirmRevokeLink},
-    mixins: [SettingsStorageMixin],
-    computed: {
-        envName() {
-            return process.env.NODE_ENV
-        },
-    },
-    data() {
-        return {
-            confirmRevokeDialog: false,
-        }
-    },
-    filters: {capitalizeFirstLetter},
-    created() {
-        this.URL_SLACK = 'https://slack.com/oauth/v2/authorize?client_id=2687560270260.2682403425669&scope=channels:history,chat:write,commands,im:history,incoming-webhook,reactions:write,users:read,users.profile:read&user_scope='
-        this.URL_TELEGRAM = 'https://t.me/thor_infobot'
-        this.URL_DISCORD = 'None'
-    },
-    methods: {
-        async onClickRevoke() {
-            const api = new APIConnector()
-            const result = await api.revokeLink()
-            eventBus.$emit(EVENTS.ON_LINK_REVOKED, result)
-        }
-    }
-}
+const URL_SLACK = 'https://slack.com/oauth/v2/authorize?client_id=2687560270260.2682403425669&scope=channels:history,chat:write,commands,im:history,incoming-webhook,reactions:write,users:read,users.profile:read&user_scope='
+const URL_TELEGRAM = 'https://t.me/thor_infobot'
+
+const confirmRevokeDialog = ref(false)
 </script>
-
-<style scoped>
-
-</style>

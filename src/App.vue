@@ -1,145 +1,136 @@
 <template>
-    <div id="app">
-        <v-app>
-            <v-snackbar
-                :timeout="2000"
-                :value="true"
-                color="success accent-4"
-                elevation="24"
-                v-model="savedAlertActive"
-            >
-                <div v-if="savedAlertKind === 'alerts'">
-                    Your preferences are saved.
-                </div>
-                <div v-if="savedAlertKind === 'node_list'">
-                    Your watchlist is saved.
-                </div>
+    <v-app>
+        <v-snackbar
+            v-model="toast.visible"
+            :color="toast.color"
+            :timeout="2500"
+            location="bottom"
+        >
+            {{ toast.text }}
+        </v-snackbar>
 
-            </v-snackbar>
+        <v-app-bar scroll-behavior="elevate" border="b" flat>
+            <template #prepend>
+                <v-app-bar-nav-icon v-if="mobile" @click="drawer = !drawer"/>
+            </template>
 
-            <v-snackbar
-                :timeout="2000"
-                :value="true"
-                color="error"
-                elevation="24"
-                v-model="errorAlertActive"
-            >
-                Error saving the settings. Check your connection.
-            </v-snackbar>
-
-            <v-app-bar elevate-on-scroll
-                       app
-                       clipped-left
-                       elevation="12"
-            >
-                <v-toolbar-title>
-                    <v-avatar>
-                        <img src="/android-chrome-512x512.png" alt="logo"/>
+            <v-app-bar-title>
+                <div class="d-flex align-center ga-3">
+                    <v-avatar size="36">
+                        <img src="/android-chrome-192x192.png" alt="NodeOp logo" width="36" height="36">
                     </v-avatar>
+                    <span class="text-truncate">NodeOp Tool settings</span>
+                    <v-chip
+                        v-if="isAnythingUpdated"
+                        size="small"
+                        color="warning"
+                        variant="tonal"
+                        prepend-icon="mdi-pencil"
+                        class="d-none d-sm-flex"
+                    >
+                        Unsaved changes
+                    </v-chip>
+                </div>
+            </v-app-bar-title>
 
-                    NodeOp Tool settings
-                    <span v-if="isAnythingUpdated">
-                        <v-icon v-if="isNodeListUpdated">mdi-asterisk</v-icon>
-                    </span>
-                </v-toolbar-title>
+            <template #append>
+                <ThemeButton/>
+            </template>
+        </v-app-bar>
 
-                <v-spacer></v-spacer>
+        <v-navigation-drawer
+            v-model="drawer"
+            :permanent="!mobile"
+            :temporary="mobile"
+            width="220"
+        >
+            <v-list nav density="comfortable" color="primary">
+                <v-list-item to="/" exact prepend-icon="mdi-home-outline" title="Start here"/>
+                <v-list-item
+                    to="/select/nodes"
+                    prepend-icon="mdi-eye-outline"
+                    title="Watchlist"
+                    :disabled="!validConnection"
+                >
+                    <template v-if="isNodeListUpdated" #append>
+                        <v-icon size="x-small" color="warning">mdi-circle</v-icon>
+                    </template>
+                </v-list-item>
+                <v-list-item
+                    to="/alerts"
+                    prepend-icon="mdi-bell-outline"
+                    title="Alerts"
+                    :disabled="!validConnection"
+                >
+                    <template v-if="isSettingsUpdated" #append>
+                        <v-icon size="x-small" color="warning">mdi-circle</v-icon>
+                    </template>
+                </v-list-item>
+            </v-list>
+        </v-navigation-drawer>
 
-                <v-btn icon>
-                    <ThemeButton></ThemeButton>
-                </v-btn>
-
-            </v-app-bar>
-
-            <v-navigation-drawer
-                app
-                clipped
-                permanent
-                v-model="drawer"
-                width="200"
-            >
-                <v-list>
-                    <v-list-item to="/" link>
-                        Start here
-                    </v-list-item>
-                    <v-list-item to="/select/nodes" link :disabled="!validConnection">
-                        Watchlist
-                        <v-icon small class="ml-1" v-if="isNodeListUpdated">mdi-asterisk</v-icon>
-                    </v-list-item>
-                    <v-list-item to="/alerts" link :disabled="!validConnection">
-                        Alerts
-                        <v-icon small class="ml-1" v-if="isSettingsUpdated">mdi-asterisk</v-icon>
-                    </v-list-item>
-                </v-list>
-            </v-navigation-drawer>
-
-            <v-main>
-                <v-container>
-                    <router-view></router-view>
-                </v-container>
-            </v-main>
-        </v-app>
-    </div>
+        <v-main>
+            <v-container class="py-6" max-width="1400">
+                <router-view/>
+            </v-container>
+        </v-main>
+    </v-app>
 </template>
 
-<script>
-import ThemeButton from "./components/ThemeButton";
-import {APIConnector, SettingsStorageMixin} from "./service/api";
-import {eventBus, EVENTS} from "./service/bus";
+<script setup>
+import {onBeforeUnmount, onMounted, ref, watch} from 'vue'
+import {useDisplay} from 'vuetify'
+import ThemeButton from '@/components/ThemeButton.vue'
+import {
+    isAnythingUpdated,
+    isNodeListUpdated,
+    isSettingsUpdated,
+    readSettings,
+    setToken,
+    store,
+    validConnection,
+} from '@/service/api'
+import {toast} from '@/service/notify'
 
-export default {
-    components: {ThemeButton},
-    mixins: [SettingsStorageMixin],
-    data() {
-        return {
-            drawer: true,
-            savedAlertActive: false,
-            savedAlertKind: 'f',
-            errorAlertActive: false,
-        }
-    },
-    methods: {
-        async loadToken() {
-            const api = new APIConnector()
+const {mobile} = useDisplay()
+const drawer = ref(!mobile.value)
 
-            const urlParams = new URLSearchParams(window.location.search);
-            const token = urlParams.get('token')
-            if(token) {
-                api.setToken(token)
-            }
+watch(mobile, isMobile => {
+    drawer.value = !isMobile
+})
 
-            await api.readSettings()
-            eventBus.$emit(EVENTS.ON_SETTINGS_LOADED)
-        },
-    },
-    mounted() {
-        document.title = 'NodeOp setup'
-        this.loadToken().then()
-    },
-    created() {
-        const that = this
-        window.onload = function () {
-            window.addEventListener("beforeunload", function (e) {
-                if (!that.isAnythingUpdated) {
-                    return undefined;
-                }
+async function loadToken() {
+    const token = new URLSearchParams(window.location.search).get('token')
+    if (token) {
+        setToken(token)
+    }
+    if (!store.token) {
+        store.loading = false
+        return
+    }
+    await readSettings()
+}
 
-                const confirmationMessage = 'It looks like you have been editing something. '
-                    + 'If you leave before saving, your changes will be lost.';
-
-                (e || window.event).returnValue = confirmationMessage; //Gecko + IE
-                return confirmationMessage; //Gecko + Webkit, Safari, Chrome etc.
-            })
-        }
-        eventBus.$on(EVENTS.PRESENT_SAVE_RESULT, ({result, kind}) => {
-            this.savedAlertKind = kind
-            if(result) {
-                this.savedAlertActive = true
-            } else {
-                this.errorAlertActive = true
-            }
-        })
+function onBeforeUnload(e) {
+    if (isAnythingUpdated.value) {
+        // Modern browsers show their own generic "leave site?" message
+        e.preventDefault()
+        e.returnValue = ''
     }
 }
+
+onMounted(() => {
+    window.addEventListener('beforeunload', onBeforeUnload)
+    loadToken()
+})
+
+onBeforeUnmount(() => {
+    window.removeEventListener('beforeunload', onBeforeUnload)
+})
 </script>
 
+<style>
+code {
+    font-size: 0.875em;
+}
+</style>

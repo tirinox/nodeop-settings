@@ -1,16 +1,20 @@
-import axios from "axios";
-import Vue from "vue";
-import _ from "lodash";
-import {simpleClone} from "./utils";
+import axios from 'axios'
+import {computed, reactive} from 'vue'
+import {cloneDeep, isEqual} from 'lodash-es'
+import {lsGet, lsSet} from './storage'
+import {simpleClone} from './utils'
+import {withDefaults} from './alertSettings'
 
-const DEV_URL = 'http://127.0.0.1:8088'
-const PROD_RUL = ''  // same domain
+// Empty base URL = same domain. In development Vite proxies /api to the backend (see vite.config.js).
+const http = axios.create({
+    baseURL: import.meta.env.VITE_API_URL || '',
+})
 
 const LS_TOKEN_KEY = 'settingsToken'
 
 export const KEY_MESSENGER = '_messenger'
 
-function tokenStoreInitialState() {
+function initialState() {
     return {
         token: '',
         messenger: {
@@ -18,7 +22,6 @@ function tokenStoreInitialState() {
             username: '',
             name: '',
         },
-        channelId: '',
         loading: true,
         isError: false,
         errorText: '',
@@ -26,176 +29,156 @@ function tokenStoreInitialState() {
         nodesList: [],
         original: {
             settings: {},
-            nodesList: []
+            nodesList: [],
         },
-        loadIteration: 0
+        loadIteration: 0,
     }
 }
 
-export const TokenStore = Vue.observable(tokenStoreInitialState())
+// Single source of truth for the settings session
+export const store = reactive(initialState())
+store.token = lsGet(LS_TOKEN_KEY, '')
 
-export const SettingsStorageMixin = {
-    computed: {
-        validConnection() {
-            return Boolean(TokenStore.token) && !this.isTokenLoading && !TokenStore.isError
-        },
-        isTokenLoading() {
-            return TokenStore.loading
-        },
-        tokenErrorText() {
-            return TokenStore.errorText
-        },
-        channelId() {
-            return TokenStore.channelId
-        },
-        messengerInfo() {
-            return TokenStore.messenger
-        },
-        isSlack() {
-            return String(TokenStore.messenger.platform).toLowerCase() === 'slack'
-        },
-        isSettingsUpdated() {
-            const s1 = simpleClone(TokenStore.settings)
-            const s2 = simpleClone(TokenStore.original.settings)
-            const eq = _.isEqual(s1, s2)
-            return !eq
-        },
-        isNodeListUpdated() {
-            return !_.isEqual(new Set(TokenStore.nodesList), new Set(TokenStore.original.nodesList))
-        },
-        isAnythingUpdated() {
-            return this.validConnection && (this.isSettingsUpdated || this.isNodeListUpdated)
-        },
-    },
-    methods: {}
+// ---- derived state ----
+
+export const isTokenLoading = computed(() => store.loading)
+export const tokenErrorText = computed(() => store.errorText)
+export const messengerInfo = computed(() => store.messenger)
+
+export const validConnection = computed(() => Boolean(store.token) && !store.loading && !store.isError)
+
+export const isSlack = computed(() => String(store.messenger.platform).toLowerCase() === 'slack')
+
+export const isSettingsUpdated = computed(
+    () => !isEqual(simpleClone(store.settings), simpleClone(store.original.settings))
+)
+
+export const isNodeListUpdated = computed(
+    () => !isEqual(new Set(store.nodesList), new Set(store.original.nodesList))
+)
+
+export const isAnythingUpdated = computed(
+    () => validConnection.value && (isSettingsUpdated.value || isNodeListUpdated.value)
+)
+
+// ---- actions ----
+
+function settingsUrl() {
+    return `/api/settings/${encodeURIComponent(store.token)}`
 }
 
-export class APIConnector {
-    constructor() {
-        this.url = process.env.NODE_ENV === 'development' ? DEV_URL : PROD_RUL
-        const t = TokenStore.token = this.locallySavedToken()
-        if (t) {
-            console.info('token = ', t)
+function saveTokenLocally() {
+    lsSet(LS_TOKEN_KEY, store.token)
+}
+
+export function setToken(token) {
+    store.token = token
+}
+
+// THORNode node list, proxied by our backend
+export async function loadNodeList() {
+    const response = await http.get('/api/nodes')
+    return Array.isArray(response.data) ? response.data : []
+}
+
+export async function readSettings() {
+    store.loading = true
+    store.isError = false
+    store.errorText = ''
+
+    try {
+        const {data} = await http.get(settingsUrl())
+        if (data?.error) {
+            store.isError = true
+            store.errorText = data.error
+            return
         }
-    }
 
-    locallySavedToken() {
-        return Vue.ls.get(LS_TOKEN_KEY, '')
-    }
-
-    saveTokenLocally() {
-        Vue.ls.set(LS_TOKEN_KEY, TokenStore.token)
-    }
-
-    settingsUrl() {
-        return `${this.url}/api/settings/${TokenStore.token}`
-    }
-
-    // THORNode node list, proxied by our backend
-    async loadNodeList() {
-        const response = await axios.get(`${this.url}/api/nodes`)
-        return response.data
-    }
-
-    async readSettings() {
-        const s = TokenStore
-        s.loading = true
-
-        try {
-            const response = await axios.get(this.settingsUrl())
-            const j = response.data
-            if (response.status !== 200 || j['error']) {
-                s.isError = true
-                s.errorText = j['error']
-            } else {
-                s.settings = j['settings']
-                s.nodesList = j['nodes']
-
-                s.messenger = _.cloneDeep(s.settings[KEY_MESSENGER])
-                if (!s.messenger) {
-                    s.messenger = {
-                        platform: 'Unknown_Platform',
-                        name: 'NoName',
-                        username: 'NoUserName',
-                    }
-                }
-
-                delete s.settings[KEY_MESSENGER]
-                s.original.settings = _.cloneDeep(s.settings)
-                s.original.nodesList = _.cloneDeep(s.nodesList)
-
-                console.debug('readSettings()', simpleClone(s))
-
-                this.saveTokenLocally()
-            }
-        } catch (e) {
-            console.error(e)
-            s.isError = true
-            s.errorText = 'network error'
-        } finally {
-            s.loading = false
+        const settings = {...(data.settings ?? {})}
+        store.messenger = cloneDeep(settings[KEY_MESSENGER]) ?? {
+            platform: 'Unknown_Platform',
+            name: 'NoName',
+            username: 'NoUserName',
         }
-    }
+        delete settings[KEY_MESSENGER]
 
-    restoreOriginalNodes() {
-        TokenStore.nodesList = _.cloneDeep(TokenStore.original.nodesList)
-    }
+        store.settings = settings
+        store.nodesList = [...(data.nodes ?? [])]
+        store.original.settings = cloneDeep(settings)
+        store.original.nodesList = cloneDeep(store.nodesList)
+        store.loadIteration++
 
-    restoreOriginalSettings() {
-        TokenStore.settings = _.cloneDeep(TokenStore.original.settings)
-    }
+        console.debug('readSettings()', simpleClone(store))
 
-    async _writeSettings() {
-        TokenStore.loading = true
-        try {
-            TokenStore.settings[KEY_MESSENGER] = TokenStore.messenger
-            const settings = {
-                settings: TokenStore.settings,
-                nodes: TokenStore.nodesList,
-            }
-            console.log(settings)
-            const response = await axios.post(this.settingsUrl(), settings)
-            const j = response.data
-            if (j['error']) {
-                TokenStore.isError = true
-                TokenStore.errorText = j['error']
-            }
-        } finally {
-            TokenStore.loading = false
+        saveTokenLocally()
+    } catch (e) {
+        console.error(e)
+        store.isError = true
+        store.errorText = e.response?.data?.error || 'network error'
+    } finally {
+        store.loading = false
+    }
+}
+
+export function restoreOriginalNodes() {
+    store.nodesList = cloneDeep(store.original.nodesList)
+}
+
+export function restoreOriginalSettings() {
+    store.settings = cloneDeep(store.original.settings)
+}
+
+async function writeSettings() {
+    store.loading = true
+    try {
+        const payload = {
+            // Persist every alert setting the UI displays, including untouched defaults
+            settings: {
+                ...withDefaults(store.settings),
+                [KEY_MESSENGER]: store.messenger,
+            },
+            nodes: store.nodesList,
         }
-    }
-
-    async saveSettings() {
-        try {
-            await this._writeSettings()
-            await this.readSettings()
-        } catch (e) {
-            return false
+        console.debug('writeSettings()', simpleClone(payload))
+        const {data} = await http.post(settingsUrl(), payload)
+        if (data?.error) {
+            store.isError = true
+            store.errorText = data.error
+            throw new Error(data.error)
         }
-        return true
+    } finally {
+        store.loading = false
     }
+}
 
-    async revokeLink() {
-        TokenStore.loading = true
-        try {
-            const response = await axios.delete(this.settingsUrl())
-            const j = response.data
-            if (j['error']) {
-                TokenStore.isError = true
-                TokenStore.errorText = j['error']
-            }
-        } finally {
-            this.purgeData()
-            TokenStore.loading = false
+// Returns true on success
+export async function saveSettings() {
+    try {
+        await writeSettings()
+        await readSettings()
+    } catch (e) {
+        console.error('Failed to save settings', e)
+        return false
+    }
+    return !store.isError
+}
+
+export async function revokeLink() {
+    store.loading = true
+    try {
+        const {data} = await http.delete(settingsUrl())
+        if (data?.error) {
+            console.error('Revoke error:', data.error)
         }
+    } catch (e) {
+        console.error('Failed to revoke the link', e)
+    } finally {
+        purgeData()
+        store.loading = false
     }
+}
 
-    purgeData() {
-        Object.assign(TokenStore, tokenStoreInitialState())
-        this.saveTokenLocally()
-    }
-
-    setToken(token) {
-        TokenStore.token = token
-    }
+export function purgeData() {
+    Object.assign(store, initialState())
+    saveTokenLocally()
 }
